@@ -198,6 +198,10 @@ class GameManager {
 
         this.ui.updatePreview(playerId, charId);
 
+        // マウスで選んだ場合もカーソルを選出先へ合わせる。
+        // 位置がずれたままだと、次にコントローラを触った時にカーソルが飛ぶ。
+        if (typeof MenuNav !== 'undefined') MenuNav.syncCursorTo(playerId, charId);
+
         const p1Ready = this.state.chars.p1 !== null;
         const p2Ready = this.state.chars.p2 !== null;
 

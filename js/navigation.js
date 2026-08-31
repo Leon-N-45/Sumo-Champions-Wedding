@@ -213,6 +213,22 @@ const MenuNav = {
         game.ui.updatePreview(playerId, parseInt(cell.dataset.id));
     },
 
+    /**
+     * 指定した力士のマスへカーソルを移動させる。
+     * マウスで選出された場合にも呼ばれ、カーソルと選出先を一致させる。
+     */
+    syncCursorTo(playerId, charId) {
+        if (charId === null || charId === undefined) return;
+        if (this.currentScreen() !== 'charSelect') return;
+
+        const idx = this.gridCells().findIndex(
+            c => c.hasAttribute('data-id') && parseInt(c.dataset.id) === charId);
+        if (idx < 0) return;
+
+        this.cursor[playerId] = idx;
+        this.paintCursors();
+    },
+
     /** 力士選択画面以外ではカーソルを隠す */
     hideCursors() {
         document.querySelectorAll('.nav-cursor').forEach(el => { el.style.display = 'none'; });

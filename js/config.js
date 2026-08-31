@@ -233,16 +233,39 @@ function speedAnimDuration(speed) {
 // ============================================================
 // ■ 体画像（衣装）の出し分け
 // ------------------------------------------------------------
-// 女性の力士はドレス姿の体画像を使う。
-// 名前の「先頭一致」で判定しているため、スプレッドシートで
-// 改名した場合はこのリストも合わせて更新すること。
-//   例: 「きたいの星」→「北居の星」に改名した場合は下の値も直す
+// スプレッドシートの「衣装」列で、力士ごとの体画像を切り替える。
+//
+// 下の対応表にある値を書くと rikishi<p1|p2><接尾辞>.png が使われる。
+//   例) 衣装列に「ドレス」→ rikiship1doresu.png / rikiship2doresu.png
+// 空欄なら通常のまわし姿 rikiship1.png / rikiship2.png になる。
+//
+// 衣装を増やすときは、画像を assets/img に置いてこの表へ1行足すだけでよい。
+//   例) ' 紋付': 'montsuki' → rikiship1montsuki.png を用意する
 // ============================================================
+const COSTUME_BODY_SUFFIX = {
+    'ドレス': 'doresu'
+};
+
+// 「衣装」列がまだ無いスプレッドシート向けの予備判定。
+// 衣装列に値が入っている力士では、こちらは参照されない。
 const DRESS_NAME_PREFIXES = ['北居の星'];
 
+// その力士が使う体画像の接尾辞を返す（通常のまわし姿なら空文字）
+function costumeSuffix(charData) {
+    if (!charData) return '';
+
+    const costume = (charData.costume || '').trim();
+    if (costume) return COSTUME_BODY_SUFFIX[costume] || '';
+
+    // 衣装列が未設定の場合のみ、名前の先頭一致で判定する
+    const name = charData.name || '';
+    return DRESS_NAME_PREFIXES.some(prefix => name.startsWith(prefix))
+        ? COSTUME_BODY_SUFFIX['ドレス']
+        : '';
+}
+
 function usesDressBody(charData) {
-    if (!charData || !charData.name) return false;
-    return DRESS_NAME_PREFIXES.some(prefix => charData.name.startsWith(prefix));
+    return costumeSuffix(charData) === COSTUME_BODY_SUFFIX['ドレス'];
 }
 
 /**
@@ -253,9 +276,7 @@ function usesDressBody(charData) {
  */
 function bodyImageFile(playerId, isCPU, charData) {
     if (isCPU) return 'rikishiCPU.png';
-    return usesDressBody(charData)
-        ? `rikishi${playerId}doresu.png`
-        : `rikishi${playerId}.png`;
+    return `rikishi${playerId}${costumeSuffix(charData)}.png`;
 }
 
 // タイプ(desc)＋カテゴリから、背景画像ファイル名とタイプアイコン名を決定する。

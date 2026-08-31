@@ -147,6 +147,7 @@ async function loadExternalData() {
                             height: parseInt(row['身長スコア'] || 3),
                             weight: parseInt(row['体重スコア'] || 3),
                             category: row['カテゴリ'] || "現役",
+                            costume: (row['衣装'] || "").trim(), // 体画像の出し分け（例: ドレス）
                             'コスト': parseInt(row['コスト'] || 0) // 団体戦の編成コスト
                         };
                     }).filter(d => d !== null);

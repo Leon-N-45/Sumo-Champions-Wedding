@@ -20,8 +20,8 @@
 // 通常版のID。切り替え忘れを検知するために保持しています。
 const NORMAL_SHEET_ID = '2PACX-1vSvQvaLULzjaLu5XmU5BrsGiuKVjW2I4Gz6M-16NUYVaxsX1V2vrRQWnk6pBdwZy1Sl1N2YMTeyD9q-';
 
-// ▼ 結婚式Ver用のIDに差し替える
-const SHEET_ID = NORMAL_SHEET_ID;
+// ▼ 結婚式Ver専用スプレッドシート（通常版からの複製・2026-08-31 切替済み）
+const SHEET_ID = '2PACX-1vT4MxPwJQWpSrarh8Wh13CvuNKD7sqAooaFy1AXE1kEpZr-g1VV3rYYTbVxVZz6ui7jjQ9JtR8C3B2e';
 
 const SHEET_GID = {
     CONFIG: '1162573541',

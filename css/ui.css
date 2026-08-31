@@ -1256,9 +1256,10 @@ input:checked + .slider:before {
     z-index: 30;
     transition: left .12s ease-out, top .12s ease-out;
 }
-/* 1Pは左、2Pは右へずらす。同じ力士を選んでも枠と札が重ならないようにするため */
-.nav-cursor.p1 { margin-left: -9px; }
-.nav-cursor.p2 { margin-left:  9px; }
+/* 通常はマスにぴったり重ねる。
+   同じ力士を指している時だけ左右へ振り分けて、両方見えるようにする。 */
+.nav-cursor.same-cell.p1 { margin-left: -7px; }
+.nav-cursor.same-cell.p2 { margin-left:  7px; }
 
 .nav-cursor .corner {
     position: absolute;
@@ -1268,27 +1269,28 @@ input:checked + .slider:before {
     border-color: inherit;
     border-width: 0;
 }
-.nav-cursor .tl { top: -5px;    left: -5px;    border-top-width: 5px; border-left-width: 5px; }
-.nav-cursor .tr { top: -5px;    right: -5px;   border-top-width: 5px; border-right-width: 5px; }
-.nav-cursor .bl { bottom: -5px; left: -5px;    border-bottom-width: 5px; border-left-width: 5px; }
-.nav-cursor .br { bottom: -5px; right: -5px;   border-bottom-width: 5px; border-right-width: 5px; }
+/* マスの外枠に沿わせる（はみ出させない） */
+.nav-cursor .tl { top: 0;    left: 0;    border-top-width: 4px; border-left-width: 4px; }
+.nav-cursor .tr { top: 0;    right: 0;   border-top-width: 4px; border-right-width: 4px; }
+.nav-cursor .bl { bottom: 0; left: 0;    border-bottom-width: 4px; border-left-width: 4px; }
+.nav-cursor .br { bottom: 0; right: 0;   border-bottom-width: 4px; border-right-width: 4px; }
 
 .nav-cursor .nav-cursor-tag {
     position: absolute;
-    top: -22px;
+    top: -17px;
     font-family: 'tamanegi', sans-serif;
-    font-size: 15px;
+    font-size: 12px;
     line-height: 1;
     color: #fff;
     text-shadow: 1px 1px 0 #000;
     border: 2px solid #000;
     border-radius: 3px;
-    padding: 3px 7px 4px;
+    padding: 2px 5px 3px;
     white-space: nowrap;
 }
-/* 札も左右に振り分けて、同じマスにいるとき重ならないようにする */
-.nav-cursor.p1 .nav-cursor-tag { left: -5px; }
-.nav-cursor.p2 .nav-cursor-tag { right: -5px; }
+/* 札は枠の内側に収める。1Pは左上、2Pは右上へ置いて左右で見分けられるようにする */
+.nav-cursor.p1 .nav-cursor-tag { left: 0; }
+.nav-cursor.p2 .nav-cursor-tag { right: 0; }
 
 /* 枠の色は border-color、札の背景は個別に指定する
    （札自身が color:#fff のため currentColor では白になってしまう） */

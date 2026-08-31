@@ -192,7 +192,12 @@ const MenuNav = {
                 el.style.height = cell.offsetHeight + 'px';
             });
 
-        // 同じマスにいるときの重なりは、CSS側で1Pを左・2Pを右へずらして避けている
+        // 普段はマスへぴったり重ね、同じ力士を指している時だけ左右へ振り分ける
+        const same = this.cursor.p1 === this.cursor.p2;
+        ['p1', 'p2'].forEach(pid => {
+                const el = grid.querySelector(`.nav-cursor.${pid}`);
+                if (el) el.classList.toggle('same-cell', same);
+            });
     },
 
     /**

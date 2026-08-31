@@ -389,8 +389,8 @@ class GameManager {
         document.getElementById('p2-cpu-badge').style.display = p2IsCPU ? 'inline-block' : 'none';
         document.getElementById('p1-controls').style.opacity = p1IsCPU ? '0.3' : '1';
         document.getElementById('p2-controls').style.opacity = p2IsCPU ? '0.3' : '1';
-        if(p1IsCPU) { document.querySelector('#p1 .body-img').src = 'assets/img/rikishiCPU.png'; } else { document.querySelector('#p1 .body-img').src = 'assets/img/rikiship1.png'; }
-        if(p2IsCPU) { document.querySelector('#p2 .body-img').src = 'assets/img/rikishiCPU.png'; } else { document.querySelector('#p2 .body-img').src = 'assets/img/rikiship2.png'; }
+        document.querySelector('#p1 .body-img').src = `assets/img/${bodyImageFile('p1', p1IsCPU, p1Data)}`;
+        document.querySelector('#p2 .body-img').src = `assets/img/${bodyImageFile('p2', p2IsCPU, p2Data)}`;
 
         // 追加：操作説明エリアに選択した顔画像を表示
         const p1FaceEl = document.getElementById('p1-control-face');

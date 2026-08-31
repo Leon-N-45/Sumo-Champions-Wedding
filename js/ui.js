@@ -273,8 +273,7 @@ class UIManager {
     buildBattleSprite(charId, side, isCPU = false) {
         const c = (typeof RIKISHI_DATA !== 'undefined') ? RIKISHI_DATA.find(d => d.id === charId) : null;
         if (!c) return '';
-        let bodyImg = (side === 'p1') ? 'assets/img/rikiship1.png' : 'assets/img/rikiship2.png';
-        if (isCPU) bodyImg = 'assets/img/rikishiCPU.png';
+        const bodyImg = `assets/img/${bodyImageFile(side === 'p1' ? 'p1' : 'p2', isCPU, c)}`;
         const faceSrc = this.getImagePath(c.img);
         const w = c.weight || 3;
         const h = c.height || 3;
@@ -950,8 +949,9 @@ class UIManager {
         if (toggleEl) isCPU = toggleEl.checked;
         if (levelEl) cpuLevel = parseInt(levelEl.value);
 
-        let imgName = playerId === 'p1' ? 'assets/img/rikiship1.png' : 'assets/img/rikiship2.png';
-        if (isCPU) imgName = 'assets/img/rikishiCPU.png';
+        const previewChar = (charId !== null && typeof RIKISHI_DATA !== 'undefined')
+            ? RIKISHI_DATA.find(d => d.id === charId) : null;
+        const imgName = `assets/img/${bodyImageFile(playerId, isCPU, previewChar)}`;
 
         const checked = isCPU ? 'checked' : '';
         const levelStyle = isCPU ? 'display:block;' : 'display:none;';

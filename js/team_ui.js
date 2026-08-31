@@ -391,7 +391,7 @@ class TeamUIManager {
         const st = this.game && this.game.state ? this.game.state : null;
         const isCPU = !!(st && st.slotCPU && st.slotCPU[playerId] && st.slotCPU[playerId][slotIndex]);
         const curLevel = (st && st.slotLevel && st.slotLevel[playerId]) ? st.slotLevel[playerId][slotIndex] : 3;
-        const bodyImg = isCPU ? 'rikishiCPU.png' : `rikishi${playerId}.png`;
+        const bodyImg = bodyImageFile(playerId, isCPU, charData);
 
         const levels = [
             { v: 7, l: "横綱" }, { v: 6, l: "大関" }, { v: 5, l: "関脇" },
@@ -431,7 +431,13 @@ class TeamUIManager {
         const slot = document.getElementById(`${playerId}-slot-${slotIndex}`);
         if (!slot) return;
         const bodyImg = slot.querySelector('.body-img');
-        if (bodyImg) bodyImg.src = checked ? 'assets/img/rikishiCPU.png' : `assets/img/rikishi${playerId}.png`;
+        if (bodyImg) {
+            // Player復帰時にドレス姿へ戻せるよう、そのスロットの力士から体画像を決める
+            const charId = (this.game.state.teams[playerId] || [])[slotIndex];
+            const charData = (charId !== null && charId !== undefined)
+                ? RIKISHI_DATA.find(d => d.id === charId) : null;
+            bodyImg.src = `assets/img/${bodyImageFile(playerId, checked, charData)}`;
+        }
         const cont = slot.querySelector('.slot-cpu-switch');
         if (cont) cont.classList.toggle('is-cpu', checked);
         const lvl = slot.querySelector('.slot-cpu-level');

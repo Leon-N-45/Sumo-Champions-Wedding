@@ -230,6 +230,34 @@ function speedAnimDuration(speed) {
     return SPEED_ANIM_DURATIONS[idx];
 }
 
+// ============================================================
+// ■ 体画像（衣装）の出し分け
+// ------------------------------------------------------------
+// 女性の力士はドレス姿の体画像を使う。
+// 名前の「先頭一致」で判定しているため、スプレッドシートで
+// 改名した場合はこのリストも合わせて更新すること。
+//   例: 「きたいの星」→「北居の星」に改名した場合は下の値も直す
+// ============================================================
+const DRESS_NAME_PREFIXES = ['北居の星'];
+
+function usesDressBody(charData) {
+    if (!charData || !charData.name) return false;
+    return DRESS_NAME_PREFIXES.some(prefix => charData.name.startsWith(prefix));
+}
+
+/**
+ * 力士の体画像のファイル名を決める。
+ *   playerId : 'p1' | 'p2'
+ *   isCPU    : CPU操作なら true（CPU専用の体を使うため衣装は反映しない）
+ *   charData : RIKISHI_DATA の1件
+ */
+function bodyImageFile(playerId, isCPU, charData) {
+    if (isCPU) return 'rikishiCPU.png';
+    return usesDressBody(charData)
+        ? `rikishi${playerId}doresu.png`
+        : `rikishi${playerId}.png`;
+}
+
 // タイプ(desc)＋カテゴリから、背景画像ファイル名とタイプアイコン名を決定する。
 // いずれのタイプにも一致しない場合は bg:'' を返す（呼び出し側で必要に応じてフォールバック）。
 function charTypeAssets(charData) {

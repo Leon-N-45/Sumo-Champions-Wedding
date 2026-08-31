@@ -295,10 +295,31 @@ function charTypeAssets(charData) {
 function buildCharGridSlots() {
     const gridSlots = new Array(20).fill(null);
     const unplaced = [];
+    const conflicts = [];   // Slotが重複していて指定位置に置けなかった力士
+    const noSlot = [];      // Slotが未設定の力士
+
     RIKISHI_DATA.forEach(d => {
-            if (d.slot !== null && d.slot >= 0 && d.slot < 20 && gridSlots[d.slot] === null) gridSlots[d.slot] = d;
-            else unplaced.push(d);
+            const valid = Number.isFinite(d.slot) && d.slot >= 0 && d.slot < 20;
+            if (valid && gridSlots[d.slot] === null) {
+                gridSlots[d.slot] = d;
+                return;
+            }
+            if (valid) conflicts.push(`${d.name}(Slot${d.slot}は${gridSlots[d.slot].name}が使用中)`);
+            else noSlot.push(d.name);
+            unplaced.push(d);
         });
+
+    // 指定通りに置けなかった力士は空きマスへ順に流し込まれる。
+    // 静かに位置がずれると気づきにくいため、原因をコンソールへ出す。
+    if (conflicts.length || noSlot.length) {
+        console.warn(
+            'スプレッドシートのSlot指定に問題があります。空いているマスへ自動配置しました。\n'
+            + (conflicts.length ? `  重複: ${conflicts.join(' / ')}\n` : '')
+            + (noSlot.length ? `  未設定: ${noSlot.join(' / ')}\n` : '')
+            + '  Charactersシートの Slot 列（0〜19で重複なし）を見直してください。'
+        );
+    }
+
     let idx = 0;
     for (let i = 0; i < 20; i++) {
         if (gridSlots[i] === null && idx < unplaced.length) gridSlots[i] = unplaced[idx++];

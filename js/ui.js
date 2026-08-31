@@ -70,13 +70,11 @@ class UIManager {
                         <div>${roundNameStr}</div>
                         <div style="display:flex; align-items:flex-end; justify-content:center; gap:120px;">
                             <div id="team-intro-p1" style="display:flex; flex-direction:column; align-items:center; opacity:0; transition:opacity 0.4s ease;">
-                                <span style="font-size:2.8rem; color:#fff;">${p1Data.name}</span>
-                                <span style="font-size:1.8rem; color:#fff; margin-top:14px;">コスト：${p1Data['コスト'] || 0}</span>
+                                ${this.teamIntroNameHtml(p1Data)}
                             </div>
                             <div id="team-intro-vs" style="font-size:5.5rem; color:#745399; text-shadow:4px 4px 0 #000; font-style:italic; opacity:0; transition:opacity 0.4s ease;">VS</div>
                             <div id="team-intro-p2" style="display:flex; flex-direction:column; align-items:center; opacity:0; transition:opacity 0.4s ease;">
-                                <span style="font-size:2.8rem; color:#fff;">${p2Data.name}</span>
-                                <span style="font-size:1.8rem; color:#fff; margin-top:14px;">コスト：${p2Data['コスト'] || 0}</span>
+                                ${this.teamIntroNameHtml(p2Data)}
                             </div>
                         </div>
                     </div>
@@ -230,13 +228,11 @@ class UIManager {
                     <div>${labels[i]}</div>
                     <div style="display:flex; align-items:flex-end; justify-content:center; gap:120px;">
                         <div id="team-intro-p1" style="display:flex; flex-direction:column; align-items:center; opacity:0; transition:opacity 0.4s ease;">
-                            <span style="font-size:2.8rem; color:#fff;">${p1Data.name}</span>
-                            <span style="font-size:1.8rem; color:#fff; margin-top:14px;">コスト：${p1Data['コスト'] || 0}</span>
+                            ${this.teamIntroNameHtml(p1Data)}
                         </div>
                         <div id="team-intro-vs" style="font-size:5.5rem; color:#745399; text-shadow:4px 4px 0 #000; font-style:italic; opacity:0; transition:opacity 0.4s ease;">VS</div>
                         <div id="team-intro-p2" style="display:flex; flex-direction:column; align-items:center; opacity:0; transition:opacity 0.4s ease;">
-                            <span style="font-size:2.8rem; color:#fff;">${p2Data.name}</span>
-                            <span style="font-size:1.8rem; color:#fff; margin-top:14px;">コスト：${p2Data['コスト'] || 0}</span>
+                            ${this.teamIntroNameHtml(p2Data)}
                         </div>
                     </div>
                 </div>
@@ -267,6 +263,18 @@ class UIManager {
             this.els.dayOverlay.classList.remove('visible', 'instant');
             this.els.dayOverlay.innerHTML = '';
         }
+    }
+
+    /**
+     * 団体戦の順番発表で出す「名前・二つ名・コスト」の並びを作る。
+     * 二つ名は名前の下の行に、やや小さく添える。
+     */
+    teamIntroNameHtml(charData) {
+        const nick = (charData.nickname || '').trim();
+        return `
+            <span style="font-size:2.8rem; color:#fff;">${charData.name}</span>
+            ${nick ? `<span style="font-size:1.7rem; color:#fff; margin-top:8px;">${nick}</span>` : ''}
+            <span style="font-size:1.8rem; color:#fff; margin-top:14px;">コスト：${charData['コスト'] || 0}</span>`;
     }
 
     // 戦闘画面と同じ見た目（顔＋体・同サイズ）の力士スプライトHTMLを生成（結果画面コーナー用）

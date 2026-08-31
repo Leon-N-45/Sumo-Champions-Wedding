@@ -292,6 +292,14 @@
     color: #fff;
     font-family: 'tamanegi', sans-serif;
     font-size: 1.4rem;
+    line-height: 1.25;
+}
+
+/* 二つ名は名前の下の行に、やや小さく添える */
+.secret-char-nickname {
+    display: block;
+    font-size: 0.7em;
+    opacity: 0.85;
 }
 
 /* =========================================

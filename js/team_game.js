@@ -264,7 +264,7 @@ class TeamGameManager {
 
                 row.innerHTML = `
                 <div class="secret-char-icon" style="background-image: url('${imgSrc}')"></div>
-                <div class="secret-char-info">${charData.name}</div>
+                <div class="secret-char-info">${charData.name}${charData.nickname ? `<span class="secret-char-nickname">${charData.nickname}</span>` : ''}</div>
                 <div class="secret-key-hint">${formatKey(keys[index])}</div>
             `;
                 listEl.appendChild(row);

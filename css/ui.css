@@ -1256,10 +1256,12 @@ input:checked + .slider:before {
     z-index: 30;
     transition: left .12s ease-out, top .12s ease-out;
 }
-/* 通常はマスにぴったり重ねる。
-   同じ力士を指している時だけ左右へ振り分けて、両方見えるようにする。 */
-.nav-cursor.same-cell.p1 { margin-left: -7px; }
-.nav-cursor.same-cell.p2 { margin-left:  7px; }
+/* 同じ力士を指している時は、枠を動かさずに鉤枠を左右で分け合う。
+   左の2つが1P（青）、右の2つが2P（赤）になり、位置はマスに合ったまま。 */
+.nav-cursor.same-cell.p1 .tr,
+.nav-cursor.same-cell.p1 .br { display: none; }
+.nav-cursor.same-cell.p2 .tl,
+.nav-cursor.same-cell.p2 .bl { display: none; }
 
 .nav-cursor .corner {
     position: absolute;
@@ -1277,15 +1279,18 @@ input:checked + .slider:before {
 
 .nav-cursor .nav-cursor-tag {
     position: absolute;
-    top: -17px;
+    top: -19px;
     font-family: 'tamanegi', sans-serif;
-    font-size: 12px;
+    font-size: 14px;
     line-height: 1;
     color: #fff;
     text-shadow: 1px 1px 0 #000;
     border: 2px solid #000;
     border-radius: 3px;
-    padding: 2px 5px 3px;
+    /* 端は枠に合わせたまま、内側（マスの中央）方向へ広げる */
+    min-width: 46px;
+    text-align: center;
+    padding: 3px 6px 4px;
     white-space: nowrap;
 }
 /* 札は枠の内側に収める。1Pは左上、2Pは右上へ置いて左右で見分けられるようにする */

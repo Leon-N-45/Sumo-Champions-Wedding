@@ -270,13 +270,16 @@ function usesDressBody(charData) {
 
 /**
  * 力士の体画像のファイル名を決める。
- *   playerId : 'p1' | 'p2'
+ *   playerId : 'p1' | 'p2'（詳細表示など、それ以外の値は p2 の見た目を使う）
  *   isCPU    : CPU操作なら true（CPU専用の体を使うため衣装は反映しない）
  *   charData : RIKISHI_DATA の1件
  */
 function bodyImageFile(playerId, isCPU, charData) {
     if (isCPU) return 'rikishiCPU.png';
-    return `rikishi${playerId}${costumeSuffix(charData)}.png`;
+    // updatePreview は 'detailview' のようなプレイヤー以外の識別子でも呼ばれる。
+    // 存在しないファイル名を組み立てないよう、p1以外はすべてp2の体に寄せる。
+    const side = (playerId === 'p1') ? 'p1' : 'p2';
+    return `rikishi${side}${costumeSuffix(charData)}.png`;
 }
 
 // タイプ(desc)＋カテゴリから、背景画像ファイル名とタイプアイコン名を決定する。

@@ -126,6 +126,20 @@ async function loadExternalData() {
             if (text) {
                 const rows = parseCSV(text);
 
+                // 身長スコア／体重スコアは1〜5を想定している。
+                // 実寸(184cmなど)が入ると体が十数倍に引き伸ばされて表示が壊れるため、
+                // 範囲内へ収めたうえで、どの力士が範囲外だったかを記録する。
+                const outOfRange = [];
+                const toScore = (raw, label, charName) => {
+                    const n = parseInt(raw);
+                    if (!Number.isFinite(n)) return 3;
+                    if (n < 1 || n > 5) {
+                        outOfRange.push(`${charName}の${label}=${n}`);
+                        return Math.min(5, Math.max(1, n));
+                    }
+                    return n;
+                };
+
                 RIKISHI_DATA = rows.map((row, i) => {
                         if (!row['名前'] && !row['Name']) return null;
                         return {
@@ -144,8 +158,8 @@ async function loadExternalData() {
                             voice: row['音声ファイル'] || "",
                             slot: parseInt(row['Slot'] || row['配置']),
                             total: parseInt(row['どすこいパワー'] || 0),
-                            height: parseInt(row['身長スコア'] || 3),
-                            weight: parseInt(row['体重スコア'] || 3),
+                            height: toScore(row['身長スコア'], '身長スコア', row['名前']),
+                            weight: toScore(row['体重スコア'], '体重スコア', row['名前']),
                             category: row['カテゴリ'] || "現役",
                             costume: (row['衣装'] || "").trim(), // 体画像の出し分け（例: ドレス）
                             'コスト': parseInt(row['コスト'] || 0) // 団体戦の編成コスト
@@ -156,6 +170,15 @@ async function loadExternalData() {
                 const slotOf = (d) => Number.isFinite(d.slot) ? d.slot : 999;
                 RIKISHI_DATA.sort((a, b) => slotOf(a) - slotOf(b));
                 console.log("キャラクターデータを読み込みました:", RIKISHI_DATA.length + "件");
+
+                if (outOfRange.length) {
+                    console.warn(
+                        '身長スコア／体重スコアが想定範囲(1〜5)を外れています。\n'
+                        + '  実寸(cm/kg)が入っていると体が極端に伸びるため、1〜5へ丸めて表示しています。\n'
+                        + '  該当: ' + outOfRange.join(' / ') + '\n'
+                        + '  Charactersシートの「身長スコア」「体重スコア」列を見直してください。'
+                    );
+                }
             }
         }
         // 3. アルバムデータの取得

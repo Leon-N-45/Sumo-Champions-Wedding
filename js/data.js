@@ -145,6 +145,7 @@ async function loadExternalData() {
                         return {
                             id: parseInt(row['ID'] || i),
                             name: row['名前'] || "Unknown",
+                            nickname: (row['二つ名'] || row['通り名'] || "").trim(), // 名前に添える二つ名
                             img: row['画像ファイル'] || "",
                             desc: (row['タイプ'] || "バランス").replace("ギジュツ", "テクニック") + "タイプ",
                             playType: (row['タイプ'] || "バランス").replace("ギジュツ", "テクニック"),

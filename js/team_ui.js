@@ -420,7 +420,7 @@ class TeamUIManager {
                     </div>
                 </div>
             </div>
-            <div class="vertical-name">${charData.name}</div>
+            <div class="vertical-name"><span class="vertical-main">${charData.name}</span>${charData.nickname ? `<span class="vertical-nickname">${charData.nickname}</span>` : ''}</div>
         `;
     }
 

@@ -155,6 +155,22 @@
     text-shadow: 2px 2px 0px #000;
     z-index: 200;
     letter-spacing: 4px;
+
+    /* 縦書きでは段が右→左へ進むため、column指定で名前の左に二段目が立つ。
+       高さを持たせることで、二段目を下端へ寄せられるようにする。 */
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;   /* 名前は従来どおり上から始める */
+    height: calc(100% - 20px);
+    pointer-events: none;
+}
+
+/* 二段目の二つ名（幼少期・新郎など）。名前より小さく、下端に揃える */
+.vertical-name .vertical-nickname {
+    align-self: flex-end;
+    font-size: 0.6em;
+    letter-spacing: 2px;
+    margin-right: 2px;         /* 縦書きでは右方向が名前側 */
 }
 /* =========================================
    団体戦のタイトル周りのレイアウト調整

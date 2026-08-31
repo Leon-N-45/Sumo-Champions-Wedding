@@ -1100,7 +1100,7 @@ class UIManager {
             html += `
             <div class="preview-info">
                 ${radarHtml} 
-                <div class="preview-name">${d.name}</div>
+                <div class="preview-name">${d.name}${d.nickname ? `<span class="preview-nickname">${d.nickname}</span>` : ''}</div>
                 <div class="preview-badge-type">${typeName}</div>
                 <div class="preview-badge-ai">${aiName}</div>
                 <div class="preview-stat-grid">

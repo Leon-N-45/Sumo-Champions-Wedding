@@ -243,6 +243,7 @@ function speedAnimDuration(speed) {
 //   例) ' 紋付': 'montsuki' → rikiship1montsuki.png を用意する
 // ============================================================
 const COSTUME_BODY_SUFFIX = {
+    'まわし': '',        // 通常のまわし姿（rikiship1.png / rikiship2.png）
     'ドレス': 'doresu'
 };
 

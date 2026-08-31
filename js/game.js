@@ -93,18 +93,8 @@ class GameManager {
         if (code === this.p2.controls.u) this.handleInashi(this.p2, this.p1);
     }
 
-    /** ゲームパッド側から押しっぱなし状態を反映するための入口 */
-    setVirtualKey(code, pressed) {
-        if (!code) return;
-        if (pressed) {
-            if (!this.keys.has(code)) {
-                this.keys.add(code);
-                this.handleActionPress(code);
-            }
-        } else {
-            this.keys.delete(code);
-        }
-    }
+    // ゲームパッドの入力は gamepad.js が実際のキーイベントとして発行するため、
+    // 専用の受け口は設けていない（上の keydown / keyup がそのまま処理する）。
 
     togglePauseMenu() {
         // 力士選出画面〜取組結果画面の一連でのみ開ける。タイトルや各選択画面では開かない。

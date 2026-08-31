@@ -92,7 +92,34 @@ const GamepadInput = {
 
     /** 決定として扱うボタン（画面操作時のみ使用） */
     isConfirm(pad) {
-        return this._btn(pad, 0) || this._btn(pad, 1) || this._btn(pad, 2) || this._btn(pad, 3);
+        return this._btn(pad, 0) || this._btn(pad, 2);
+    },
+
+    /** 取消（選出のやり直し）として扱うボタン */
+    isCancel(pad) {
+        return this._btn(pad, 1) || this._btn(pad, 3);
+    },
+
+    /**
+     * パッドの入力を、実際のキーイベントとして発行する。
+     *
+     * ゲーム側には keys 集合を見る処理と、keydown を直接listenする処理
+     * （団体戦の出場者選択など）の両方がある。イベントとして流すことで
+     * どちらの経路も特別扱いせずに動かせる。
+     * document から発行して window まで伝播させる。
+     */
+    _send(code, type) {
+        if (!code) return;
+        document.dispatchEvent(new KeyboardEvent(type, {
+                code, bubbles: true, cancelable: true
+            }));
+    },
+
+    /** 状態が変わった時だけキーイベントを発行する */
+    _apply(held, key, now, code) {
+        if (now === !!held[key]) return;
+        held[key] = now;
+        this._send(code, now ? 'keydown' : 'keyup');
     },
 
     poll() {
@@ -102,7 +129,7 @@ const GamepadInput = {
 
         const pads = this.getPads();
 
-        // 選択画面などを操作中は、取組用のキー入力ではなく画面操作として扱う
+        // 選択画面などを操作中は、face ボタンを決定・取消として扱う
         const onMenu = (typeof MenuNav !== 'undefined') && !!MenuNav.currentScreen();
 
         this.playerOrder.forEach((playerId, i) => {
@@ -110,25 +137,17 @@ const GamepadInput = {
             const controls = settings.current.controls[playerId];
             if (!controls) return;
 
-            // パッドが繋がっていない場合は、押しっぱなしの状態だけ解除しておく
+            // パッドが繋がっていない場合は、押しっぱなしの状態だけ解除する
             const dirs = pad ? this.readDirections(pad, onMenu) : { l: false, r: false, u: false, d: false };
             const held = this._held[playerId];
 
-            if (onMenu) {
-                // 取組用のキーが押しっぱなしのまま残らないよう、先に解除する
-                ['l', 'r', 'u', 'd'].forEach(dir => {
-                        if (held[dir]) { held[dir] = false; game.setVirtualKey(controls[dir], false); }
-                    });
-                MenuNav.feedFromPad(playerId, dirs, pad ? this.isConfirm(pad) : false);
-                return;
-            }
+            ['l', 'r', 'u', 'd'].forEach(dir => this._apply(held, dir, dirs[dir], controls[dir]));
 
-            ['l', 'r', 'u', 'd'].forEach(dir => {
-                    const now = dirs[dir];
-                    if (now === !!held[dir]) return;   // 変化なし
-                    held[dir] = now;
-                    game.setVirtualKey(controls[dir], now);
-                });
+            // 決定・取消は画面操作中のみ。取組中は face ボタンをいなし・溜めに使う
+            const confirmOn = onMenu && pad ? this.isConfirm(pad) : false;
+            const cancelOn  = onMenu && pad ? this.isCancel(pad)  : false;
+            this._apply(held, 'confirm', confirmOn, MenuNav.confirmKeys[playerId][0]);
+            this._apply(held, 'cancel',  cancelOn,  MenuNav.cancelKeys[playerId][0]);
         });
     },
 
@@ -137,10 +156,10 @@ const GamepadInput = {
         this.playerOrder.forEach(playerId => {
                 const controls = settings.current.controls[playerId];
                 const held = this._held[playerId];
-                ['l', 'r', 'u', 'd'].forEach(dir => {
-                        if (held[dir] && controls) game.setVirtualKey(controls[dir], false);
-                        held[dir] = false;
-                    });
+                if (!controls) return;
+                ['l', 'r', 'u', 'd'].forEach(dir => this._apply(held, dir, false, controls[dir]));
+                this._apply(held, 'confirm', false, MenuNav.confirmKeys[playerId][0]);
+                this._apply(held, 'cancel',  false, MenuNav.cancelKeys[playerId][0]);
             });
     },
 

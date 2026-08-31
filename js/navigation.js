@@ -20,13 +20,18 @@ const MenuNav = {
         p2: ['Enter', 'NumpadEnter']
     },
 
+    // 取消（選出のやり直し）に使うキー
+    cancelKeys: {
+        p1: ['KeyQ'],
+        p2: ['Backspace', 'ShiftRight']
+    },
+
     // 力士選択グリッドの構成（CSSの grid-template-columns と揃えること）
     gridCols: 4,
     gridSize: 20,
 
     cursor: { p1: 0, p2: 3 },   // 力士選択グリッド上の位置
     focus: 0,                   // ボタンが並ぶ画面での選択位置
-    _repeat: {},                // 押しっぱなしの連続移動を抑えるための記録
 
     // ---------------------------------------------------------------
     // 画面の判定
@@ -45,8 +50,14 @@ const MenuNav = {
         if (finalBtns && finalBtns.style.display === 'flex') return 'result';
 
         if (this.isActive('char-select-screen')) return 'charSelect';
+        if (this.isActive('team-select-screen')) return 'teamSelect';
         if (this.isActive('start-screen')) return 'title';
         return null;
+    },
+
+    /** グリッドを持つ画面かどうか（個人戦・団体戦の力士選択） */
+    isGridScreen(screen) {
+        return screen === 'charSelect' || screen === 'teamSelect';
     },
 
     /** 画面上で押せるボタンを順番に並べて返す */
@@ -74,7 +85,50 @@ const MenuNav = {
         if (!screen || screen === 'modal') return false;
 
         if (screen === 'charSelect') return this.handleCharSelect(playerId, action);
+        if (screen === 'teamSelect') return this.handleTeamSelect(playerId, action);
         return this.handleButtons(screen, action);
+    },
+
+    /**
+     * 団体戦の選択画面。
+     * 決定で空いている枠へ先鋒から順に入れ、3人揃うと取組開始できる。
+     * 取消で最後に入れた1人を外す（枠を個別に選ばせると操作が複雑になるため）。
+     */
+    handleTeamSelect(playerId, action) {
+        const team = teamGame.state.teams[playerId];
+
+        if (action === 'cancel') {
+            for (let i = team.length - 1; i >= 0; i--) {
+                if (team[i] !== null) { teamGame.selectTeamChar(playerId, i, null); return true; }
+            }
+            return false;
+        }
+
+        if (action === 'confirm') {
+            const empty = team.indexOf(null);
+
+            // 両者3人ずつ揃っていれば、決定で取組開始
+            if (empty < 0) {
+                const other = teamGame.state.teams[playerId === 'p1' ? 'p2' : 'p1'];
+                if (other.indexOf(null) < 0) this.startTeamIfReady();
+                return true;
+            }
+
+            const cell = this.gridCells()[this.cursor[playerId]];
+            if (!this.isSelectable(cell)) return false;
+            teamGame.selectTeamChar(playerId, empty, parseInt(cell.dataset.id));
+            this.paintCursors();
+            return true;
+        }
+
+        return this.moveCursor(playerId, action);
+    },
+
+    /** 取組開始の条件（人数・コスト）が満たされていれば開始する */
+    startTeamIfReady() {
+        const headerImg = document.getElementById('team-select-header-img');
+        // 条件を満たした時だけ checkStartCondition が onclick を設定する
+        if (headerImg && typeof headerImg.onclick === 'function') headerImg.onclick();
     },
 
     // --- ボタンが並ぶ画面（タイトル・結果） ---
@@ -102,9 +156,15 @@ const MenuNav = {
     },
 
     // --- 力士選択画面 ---
+    /** いま操作している画面のアイコングリッドを返す（個人戦と団体戦で別物） */
+    gridEl() {
+        const screenId = (this.currentScreen() === 'teamSelect')
+            ? '#team-select-screen' : '#char-select-screen';
+        return document.querySelector(`${screenId} #icon-grid`);
+    },
+
     gridCells() {
-        const grid = document.querySelector('#char-select-screen #icon-grid')
-                  || document.getElementById('icon-grid');
+        const grid = this.gridEl();
         if (!grid) return [];
         // カーソル自身もグリッドの子になるため、マスの数え上げからは除く
         return [...grid.children].filter(c => !c.classList.contains('nav-cursor'));
@@ -117,9 +177,38 @@ const MenuNav = {
             && !cell.classList.contains('secret-hidden'));
     },
 
+    /** グリッド上のカーソルを1マス動かす（個人戦・団体戦で共通） */
+    moveCursor(playerId, action) {
+        const cells = this.gridCells();
+        if (!cells.length) return false;
+
+        const delta = { left: -1, right: 1, up: -this.gridCols, down: this.gridCols }[action];
+        if (delta === undefined) return false;
+
+        // 選べないマスは飛ばして次の候補へ進む
+        let pos = this.cursor[playerId];
+        for (let i = 0; i < this.gridSize; i++) {
+            pos += delta;
+            if (pos < 0 || pos >= cells.length) return false;   // 端で止める
+            if (this.isSelectable(cells[pos])) {
+                this.cursor[playerId] = pos;
+                this.paintCursors();
+                this.previewUnderCursor(playerId);
+                return true;
+            }
+        }
+        return false;
+    },
+
     handleCharSelect(playerId, action) {
         const cells = this.gridCells();
         if (!cells.length) return false;
+
+        if (action === 'cancel') {
+            if (game.state.chars[playerId] === null) return false;
+            game.selectChar(playerId, null);
+            return true;
+        }
 
         if (action === 'confirm') {
             // 両者とも選び終えていれば、決定で取組開始
@@ -135,28 +224,12 @@ const MenuNav = {
             return true;
         }
 
-        const delta = { left: -1, right: 1, up: -this.gridCols, down: this.gridCols }[action];
-        if (delta === undefined) return false;
-
-        // 選べないマスは飛ばして次の候補へ進む
-        let pos = this.cursor[playerId];
-        for (let i = 0; i < this.gridSize; i++) {
-            pos += delta;
-            if (pos < 0 || pos >= this.gridSize) return false;   // 端で止める
-            if (this.isSelectable(cells[pos])) {
-                this.cursor[playerId] = pos;
-                this.paintCursors();
-                this.previewUnderCursor(playerId);
-                return true;
-            }
-        }
-        return false;
+        return this.moveCursor(playerId, action);
     },
 
     /** カーソル本体を用意する（グリッド内に1P・2P分を1つずつ置く） */
     ensureCursorEls() {
-        const grid = document.querySelector('#char-select-screen #icon-grid')
-                  || document.getElementById('icon-grid');
+        const grid = this.gridEl();
         if (!grid) return null;
 
         ['p1', 'p2'].forEach(pid => {
@@ -206,6 +279,8 @@ const MenuNav = {
      * すでに選出を確定しているプレイヤーには行わない。
      */
     previewUnderCursor(playerId) {
+        // 団体戦は3人分の枠に直接表示されるため、下見表示は個人戦のみ
+        if (this.currentScreen() !== 'charSelect') return;
         if (game.state.chars[playerId] !== null) return;
 
         const cell = this.gridCells()[this.cursor[playerId]];
@@ -236,7 +311,7 @@ const MenuNav = {
 
     /** 画面が切り替わった時に選択位置を初期化する */
     resetFor(screen) {
-        if (screen === 'charSelect') {
+        if (this.isGridScreen(screen)) {
             const cells = this.gridCells();
             const first = cells.findIndex(c => this.isSelectable(c));
             const last = cells.map((c, i) => this.isSelectable(c) ? i : -1)
@@ -271,6 +346,7 @@ const MenuNav = {
                     else if (e.code === c.u) action = 'up';
                     else if (e.code === c.d) action = 'down';
                     else if (this.confirmKeys[playerId].includes(e.code)) action = 'confirm';
+                    else if (this.cancelKeys[playerId].includes(e.code)) action = 'cancel';
 
                     if (action && this.handle(playerId, action)) {
                         e.preventDefault();
@@ -292,22 +368,6 @@ const MenuNav = {
         requestAnimationFrame(watch);
     },
 
-    /**
-     * ゲームパッドから毎フレーム呼ばれる。
-     * 押しっぱなしで進み続けないよう、離すまで1回だけ反応させる。
-     */
-    feedFromPad(playerId, dirs, confirmPressed) {
-        if (!this.currentScreen()) return;
-
-        const fire = (key, active, action) => {
-            const id = playerId + ':' + key;
-            if (active && !this._repeat[id]) this.handle(playerId, action);
-            this._repeat[id] = active;
-        };
-        fire('l', dirs.l, 'left');
-        fire('r', dirs.r, 'right');
-        fire('u', dirs.u, 'up');
-        fire('d', dirs.d, 'down');
-        fire('c', confirmPressed, 'confirm');
-    }
+    // ゲームパッドの入力は gamepad.js がキーイベントとして発行するため、
+    // 上の keydown 監視がそのまま拾う。専用の受け口は不要。
 };

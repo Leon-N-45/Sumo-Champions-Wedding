@@ -66,18 +66,27 @@ const GamepadInput = {
         return (typeof b === 'object') ? b.pressed : b > 0.5;
     },
 
-    /** パッド1台の状態を、方向ごとの押下有無へ変換する */
-    readDirections(pad) {
+    /**
+     * パッド1台の状態を、方向ごとの押下有無へ変換する。
+     *
+     * menuMode が true のときは face ボタンを方向として扱わない。
+     * 画面操作中は face ボタンが「決定」を兼ねるため、両方に反応すると
+     * 決定を押した瞬間に選択が1つ動いてしまう。
+     */
+    readDirections(pad, menuMode = false) {
         const dz = this.deadzone;
         const ax = pad.axes[0] || 0;
         const ay = pad.axes[1] || 0;
 
+        // 取組中は、いなし・溜めを face ボタンでも出せるようにする
+        const faceU = !menuMode && (this._btn(pad, 0) || this._btn(pad, 2));
+        const faceD = !menuMode && (this._btn(pad, 1) || this._btn(pad, 3));
+
         return {
             l: ax <= -dz || this._btn(pad, 14),
             r: ax >= dz || this._btn(pad, 15),
-            // いなし・溜めはスティック上下でも、face ボタンでも出せるようにする
-            u: ay <= -dz || this._btn(pad, 12) || this._btn(pad, 0) || this._btn(pad, 2),
-            d: ay >= dz || this._btn(pad, 13) || this._btn(pad, 1) || this._btn(pad, 3)
+            u: ay <= -dz || this._btn(pad, 12) || faceU,
+            d: ay >= dz || this._btn(pad, 13) || faceD
         };
     },
 
@@ -102,7 +111,7 @@ const GamepadInput = {
             if (!controls) return;
 
             // パッドが繋がっていない場合は、押しっぱなしの状態だけ解除しておく
-            const dirs = pad ? this.readDirections(pad) : { l: false, r: false, u: false, d: false };
+            const dirs = pad ? this.readDirections(pad, onMenu) : { l: false, r: false, u: false, d: false };
             const held = this._held[playerId];
 
             if (onMenu) {

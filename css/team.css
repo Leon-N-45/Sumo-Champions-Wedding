@@ -1,0 +1,482 @@
+@charset "UTF-8";
+
+/* --- 1. ゲームの外枠 --- */
+#sumo-frame {
+    position: fixed !important;
+    inset: 0 !important;
+    z-index: 100000 !important;
+    pointer-events: none;
+    border: 16px solid #0d0d0d !important;
+}
+#sumo-frame::after {
+    content: ""; position: absolute; inset: 4px;
+    border: 4px solid #0d0d0d;
+}
+
+/* --- 2. 画面配置 --- */
+#select-scaling-wrapper {
+    position: absolute !important;
+    top: 50% !important;
+    left: 50% !important;
+    width: 1260px;
+    height: 900px;
+    transform: translate(-50%, -50%);
+    transform-origin: center center;
+}
+
+/* --- 3. 左右パネル（レイアウト崩れ防止） --- */
+.team-panel {
+    position: absolute !important;
+    top: 185px !important;
+    width: 280px !important;
+    height: 700px !important; /* 固定高 */
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+.p1-team-panel { left: 30px !important; }
+.p2-team-panel { right: 30px !important; }
+
+/* コスト表示エリア（中央揃え・フォント設定） */
+.team-cost-area {
+    width: 100%;
+    text-align: center;
+    margin-bottom: 10px;
+}
+
+/* コスト数値の表示 */
+.cost-val {
+    font-size: 3rem;
+    font-weight: 900;
+    font-family: "tamanegi", serif !important;
+    color: #ffffff;
+    -webkit-text-stroke: 4px black;
+    paint-order: stroke;
+}
+
+/* --- 4. 力士カード（スロット）：サイズと間隔の縮小 --- */
+.slot-wrapper {
+    position: relative;
+    margin-bottom: 5px; /* 間隔を狭める */
+    width: 240px; /* 260から縮小 */
+    height: 190px; /* 220から縮小 */
+}
+
+.team-slot {
+    width: 100%; height: 100%;
+    position: relative; overflow: hidden;
+    border: 8px solid #0d0d0d !important;
+    background: #222 !important; /* 深いグレー */
+    z-index: 1;
+}
+.team-slot::after {
+    content: ""; position: absolute; inset: 2px;
+    border: 2px solid #0d0d0d;
+    pointer-events: none; z-index: 100;
+}
+
+.team-slot .char-background {
+    position: absolute; inset: 0; transform: none !important;
+    background-size: cover; background-position: center;
+    opacity: 0.4; z-index: 1;
+}
+
+.team-slot .preview-char-img {
+    position: absolute !important;
+    width: 300px !important;
+    height: 300px !important;
+    left: 50% !important;
+    margin-left: -150px !important;
+    top: auto !important;
+    transform-origin: bottom center !important;
+    pointer-events: none;
+    z-index: 5;
+}
+
+#start-btn-container {
+    position: absolute;
+    width: 100%;
+    bottom: 60px;
+    text-align: center;
+    pointer-events: auto;
+}
+
+/* --- タイプ別 登場アニメーション設定（個人戦・団体戦共通。ui.css側からも参照） --- */
+@keyframes dockBalance { 0% { transform: translateY(-50px) scale(0.9); opacity: 0; } 20% { transform: translateY(0) scale(1); opacity: 1; } 35% { transform: rotate(-15deg) translateY(-15px); } 50% { transform: rotate(0) translateY(5px) scale(1.05, 0.95); } 65% { transform: rotate(15deg) translateY(-15px); } 80% { transform: rotate(0) translateY(5px) scale(1.05, 0.95); } 100% { transform: rotate(0) translateY(0) scale(1); } }
+@keyframes dockTech { 0% { transform: scale(0) rotate(-360deg); opacity: 0; } 60% { transform: scale(1.2) rotate(20deg) translateY(-10px); opacity: 1; } 80% { transform: scale(0.9) rotate(-10deg); } 100% { transform: scale(1) rotate(0); } }
+@keyframes dockPower { 0% { transform: translateY(-300px) scale(1.5); opacity: 0; } 60% { transform: translateY(0) scale(1.4, 0.6); opacity: 1; } 75% { transform: translateY(-30px) scale(0.9, 1.1); } 85% { transform: translateY(5px) scale(1.05, 0.95); } 100% { transform: translateY(0) scale(1); } }
+@keyframes dockSpeed { 0% { transform: translateX(-300px) skewX(-45deg); opacity: 0; } 60% { transform: translateX(30px) skewX(20deg); opacity: 1; } 80% { transform: translateX(-10px) skewX(-10deg); } 100% { transform: translateX(0) skewX(0); } }
+@keyframes idleBreath { 0% { transform: scale(1); } 50% { transform: scale(1.02, 0.98) translateY(2px); } 100% { transform: scale(1); } }
+
+/* アニメーションクラスの紐付け */
+.dock-balance { animation: dockBalance 0.6s ease-in-out; }
+.dock-tech { animation: dockTech 0.6s cubic-bezier(0.34, 1.56, 0.64, 1); }
+.dock-power { animation: dockPower 0.6s cubic-bezier(0.6, -0.28, 0.735, 0.045) forwards; }
+.dock-speed { animation: dockSpeed 0.4s ease-out; }
+
+/* 待機呼吸モーション：全タイプ共通で早めに開始（バランスだけ長く静止する問題を解消） */
+.preview-char-img.is-selected .rikishi-body {
+    animation: idleBreath 2.0s infinite ease-in-out;
+    animation-delay: 0.5s;
+}
+
+/* 未選択時の位置 */
+.preview-char-img:not(.is-selected) .rikishi-body {
+    transform: translateY(0px);
+}
+
+/* ゲージの幅を固定 */
+.team-cost-bar-bg {
+    width: 200px;
+    height: 12px;
+    background: #111;
+    border-radius: 6px;
+    border: 2px solid #000;
+    overflow: hidden;
+    margin: 5px auto;
+}
+
+/* 力士カードの入れ物：位置を固定 */
+.team-slots-container {
+    display: flex;
+    flex-direction: column;
+    margin-top: 10px;
+}
+
+.vertical-name {
+    position: absolute;
+    top: 10px;
+    left: 10px !important;
+    writing-mode: vertical-rl;
+    text-orientation: upright;
+    color: #fff;
+    font-family: 'tamanegi', serif;
+    font-size: 24px;
+    text-shadow: 2px 2px 0px #000;
+    z-index: 200;
+    letter-spacing: 4px;
+}
+/* =========================================
+   団体戦のタイトル周りのレイアウト調整
+========================================= */
+
+/* 1. 黒幕（コンテナ）の位置とサイズは固定（カンペキな状態をキープ） */
+#team-char-title-container {
+    top: 35px !important;
+    height: 170px !important;
+}
+
+/* 画像の上側に余白を作って、中身（画像＋文章）だけを少し下げる */
+#team-select-header-img {
+    margin-top: 15px !important; /* ここの数値で下がり具合を調整します（例: 10px, 20px） */
+}
+
+/* 2. 補足テキストのフォントと【高さ固定】（コストオーバー等のズレを完全に防ぐ） */
+#team-select-instruction-text {
+    font-family: 'tamanegi', sans-serif !important;
+    font-weight: normal !important;
+    height: 45px !important;       /* 箱の高さを固定 */
+    line-height: 20px !important;  /* 文字の縦位置を固定 */
+}
+
+/* 3. 準備完了時（取り組み開始）の文字エフェクトを個人戦と同期 */
+.torikumi-obi-mode #team-select-instruction-text {
+    color: #fff !important;
+    background: transparent !important;
+    text-shadow: 3px 3px 0 rgba(0, 0, 0, 0.8) !important;
+    font-size: 1.3rem !important;
+    position: relative !important;
+    border: none !important;
+}
+
+/* =========================================
+   団体戦：シークレット選出画面
+========================================= */
+#team-secret-screen {
+    background-color: #000000 !important; /* 背景色を真っ黒に強制 */
+    background-image: none !important;    /* 背景画像がある場合は消す */
+}
+
+/* 模様などの装飾（擬似要素）が裏にある場合はそれも完全に消す */
+#team-secret-screen::before,
+#team-secret-screen::after {
+    display: none !important;
+}
+.secret-panels-container {
+    position: absolute;
+    top: 220px;
+    left: 0;
+    width: 100%;
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    padding: 0 100px;
+}
+
+.secret-panel {
+    position: relative;
+    width: 380px;
+    background: transparent; /* 変更: 黒い半透明背景を消す */
+    border: none;            /* 変更: 枠線を消す */
+    border-radius: 16px;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    box-shadow: none;        /* 変更: パネルの影を消す */
+}
+.p1-secret-panel { border-color: transparent; }
+.p2-secret-panel { border-color: transparent; }
+.secret-player-label {
+    font-family: "M PLUS Rounded 1c", sans-serif;
+    font-size: 2.2rem;
+    font-weight: 900;
+    text-align: center;
+    margin-bottom: 5px;
+    text-shadow: 2px 2px 0 #000;
+}
+
+/* 各力士の行（顔＋名前＋キーボード） */
+.secret-char-row {
+    display: flex;
+    align-items: center;
+    background: transparent; /* 変更: 白い半透明背景を消す */
+    border-radius: 8px;
+    padding: 15px;
+    gap: 10px;
+    border: none;            /* 変更: 枠線を完全に消す */
+}
+
+/* 使用済みの力士（グレーアウト） */
+.secret-char-row.used-char {
+    filter: grayscale(1) brightness(0.3);
+    pointer-events: none;
+}
+
+/* 顔アイコン */
+.secret-char-icon {
+    width: 120px;  /* 必要に応じてサイズを大きくしてもOK */
+    height: 120px;
+
+    /* 丸い切り取りを止める */
+    border-radius: 0;
+
+    /* 前回の要望：枠と背景を消す */
+    border: none;
+    background-color: transparent;
+
+    /* 画像の表示設定 */
+    background-size: contain; /* ここを contain に変更: 画像全体を領域内に収める */
+    background-repeat: no-repeat; /* 画像を繰り返さない */
+    background-position: center center; /* 中央に配置 */
+}
+/* 力士名 */
+.secret-char-info {
+    flex: 1;
+    color: #fff;
+    font-family: 'tamanegi', sans-serif;
+    font-size: 1.4rem;
+}
+
+/* =========================================
+   キーボードのキー表示（和風・八角形）
+========================================= */
+.secret-key-hint {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 50px;
+    height: 50px;
+    padding: 0 10px;
+    color: #000000;
+    font-size: 1.4rem;
+    font-family: "M PLUS Rounded 1c", sans-serif;
+    font-weight: bold;
+
+    /* 元の背景と枠線を透明にし、擬似要素を重ねる準備 */
+    background: transparent !important;
+    border: none !important;
+
+    /* clip-pathを使った要素に影をつけるための処理 */
+    box-shadow: none;
+    filter: drop-shadow(0 4px 0 #111);
+
+    position: relative;
+    z-index: 1;
+}
+
+/* 1. 外側の「枠線」になる八角形（グレー） */
+.secret-key-hint::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background-color: #000000; /* 元の枠線の色 */
+
+    /* 50pxの箱に合わせて、四隅を8px分カット */
+    clip-path: polygon(8px 0, calc(100% - 8px) 0, 100% 8px, 100% calc(100% - 8px), calc(100% - 8px) 100%, 8px 100%, 0 calc(100% - 8px), 0 8px);
+    z-index: -2;
+}
+
+/* 2. 内側の「背景色」になる八角形（ダークグレー） */
+.secret-key-hint::after {
+    content: '';
+    position: absolute;
+    /* 2px内側に配置して「2pxの枠線」に見せる */
+    top: 2px; left: 2px; right: 2px; bottom: 2px;
+    background-color: #ffffff; /* 元の背景色 */
+
+    /* 外側のカット(8px)から内側に寄った分(2px)小さくする(6px) */
+    clip-path: polygon(6px 0, calc(100% - 6px) 0, 100% 6px, 100% calc(100% - 6px), calc(100% - 6px) 100%, 6px 100%, 0 calc(100% - 6px), 0 6px);
+    z-index: -1;
+}
+
+/* 中央のVS */
+.secret-vs-mark {
+    font-family: 'tamanegi', sans-serif;
+    font-size: 6rem;
+    color: #745399;
+    text-shadow: 4px 4px 0 #000;
+    font-style: italic;
+    margin-top: 50px;
+}
+
+/* =========================================
+   準備完了スタンプ（軍配画像バージョン）
+========================================= */
+.secret-ready-stamp {
+    position: absolute;
+    top: 5%;
+    left: 55%;
+
+    /* 初期状態：デカくて少し傾いている状態からスタート */
+    transform: translate(-50%, -50%) rotate(-30deg) scale(2);
+
+    /* 軍配の表示サイズ（大きすぎる/小さすぎる場合はここを調整） */
+    width: 180px;
+    height: 180px;
+
+    /* 軍配画像の読み込み */
+    background-image: url('../assets/img/gumbai.png');
+    background-size: contain;
+    background-position: center;
+    background-repeat: no-repeat;
+
+    /* HTML内にある元の「準備完了」の文字を完全に隠す */
+    color: transparent !important;
+    font-size: 0 !important;
+    text-shadow: none !important;
+    padding: 0 !important;
+
+    /* 既存の枠線・背景を消す */
+    border: none !important;
+    background-color: transparent !important;
+
+    /* 軍配のシルエットに合わせて渋い影を落とす */
+    box-shadow: none !important;
+    filter: drop-shadow(0 15px 15px rgba(0,0,0,0.6));
+
+    opacity: 0;
+    pointer-events: none;
+    transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    z-index: 100;
+}
+
+/* 前回の八角形を作る擬似要素を完全に無効化 */
+.secret-ready-stamp::before,
+.secret-ready-stamp::after {
+    display: none !important;
+}
+
+/* 軍配がバーン！と掲げられた状態 */
+.secret-ready-stamp.active {
+    opacity: 1;
+    /* スッと構えるような角度に落ち着く（-10度） */
+    transform: translate(-50%, -50%) rotate(-20deg) scale(1);
+}
+
+/* 勝ち抜きの出場順インジケータ（キー枠と同じ八角形。点灯で江戸紫に染まる） */
+.order-dot {
+    position: relative;
+    width: 30px; height: 30px;
+    background-color: var(--ink-black, #111);
+    clip-path: polygon(8px 0, calc(100% - 8px) 0, 100% 8px, 100% calc(100% - 8px), calc(100% - 8px) 100%, 8px 100%, 0 calc(100% - 8px), 0 8px);
+    transition: all 0.2s ease;
+}
+.order-dot::after {
+    content: '';
+    position: absolute;
+    top: 3px; left: 3px; right: 3px; bottom: 3px;
+    background-color: #fdfbf5;
+    clip-path: polygon(6px 0, calc(100% - 6px) 0, 100% 6px, 100% calc(100% - 6px), calc(100% - 6px) 100%, 6px 100%, 0 calc(100% - 6px), 0 6px);
+    transition: all 0.2s ease;
+}
+.order-dot.lit::after { background-color: #745399; }
+
+/* 団体戦の力士選択画面の背景模様（個人戦キャラ選択と同じ青海波） */
+#team-select-screen::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='60' height='60' viewBox='0 0 60 60'%3E%3Cg stroke='%23000' stroke-width='1.5' fill='none'%3E%3Ccircle cx='0' cy='0' r='30'/%3E%3Ccircle cx='60' cy='0' r='30'/%3E%3Ccircle cx='0' cy='60' r='30'/%3E%3Ccircle cx='60' cy='60' r='30'/%3E%3Ccircle cx='30' cy='30' r='30'/%3E%3C/g%3E%3C/svg%3E");
+    background-size: 60px 60px;
+    opacity: 0.04;
+    z-index: 0;
+    pointer-events: none;
+}
+#team-select-scaling-wrapper { position: relative; z-index: 10; }
+
+/* === スロット単位CPUスイッチ（団体戦の各枠 右上・囲みボックス無し） === */
+.slot-cpu-switch {
+    position: absolute; top: 5px; right: 0px; z-index: 250;
+    display: flex; flex-direction: column; align-items: flex-end; gap: 6px;
+    transform: scale(0.7); transform-origin: top right;
+    pointer-events: auto;
+    background: none; border: none; box-shadow: none; padding: 0;
+}
+.slot-cpu-switch .switch { filter: drop-shadow(0 1px 2px rgba(0,0,0,0.7)); margin-right: 26px;margin-top: 5px;  }
+.slot-cpu-switch .slider { background-color: rgba(255,255,255,0.55); }
+.slot-cpu-switch.is-cpu .slider { background-color: #7e22ce; }
+.slot-cpu-switch .slot-cpu-level {
+    font-size: 0.95rem; padding: 2px 8px; max-width: 86px; min-width: 0;
+    background: rgba(20,20,20,0.8); color: #fff;
+    border: 1px solid rgba(255,255,255,0.5); border-radius: 8px;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.5);
+}
+/* === 力士詳細カード（団体戦：選出グリッドの各顔アイコン左下のgumbai2クリックで中央表示） === */
+.char-select-icon { position: relative; }
+.icon-detail-btn {
+    position: absolute; bottom: 69px; left: 4px; z-index: 30;
+    width: 23px; height: 23px; padding: 0; border: none; background: none; cursor: pointer;
+    opacity: 0; visibility: hidden;
+    transition: opacity 0.12s, transform 0.12s;
+}
+/* 該当スロットにカーソルを乗せた時だけ、そのスロットのgumbaiを表示 */
+.char-select-icon:hover .icon-detail-btn { opacity: 1; visibility: visible; }
+.icon-detail-btn img { width: 100%; height: 100%; object-fit: contain; filter: drop-shadow(0 1px 2px rgba(0,0,0,0.85)); pointer-events: none; }
+.icon-detail-btn:hover { transform: scale(1.18); }
+
+.char-detail-overlay {
+    position: fixed; inset: 0; z-index: 99999;
+    background: rgba(0,0,0,0.72);
+    display: flex; align-items: center; justify-content: center;
+    animation: fadeInDetail 0.18s ease-out;
+}
+@keyframes fadeInDetail { from { opacity: 0; } to { opacity: 1; } }
+.char-detail-card { transform: scale(1.25); transform-origin: center; }
+.char-detail-card .preview-box {
+    position: relative !important; top: auto !important; left: auto !important;
+    transform: none !important; margin: 0 !important;
+}
+/* 詳細カードでは操作スイッチや操作バッジは隠す */
+.char-detail-overlay .cpu-switch-container,
+.char-detail-overlay .preview-badge-control { display: none !important; }
+
+/* 力士の重複「なし」時、同一チームに同じ力士を置こうとした時のはじき表現 */
+@keyframes dupReject {
+    0%, 100% { transform: translateX(0); box-shadow: none; }
+    20% { transform: translateX(-5px); box-shadow: 0 0 0 3px rgba(220,38,38,0.9) inset; }
+    40% { transform: translateX(5px); box-shadow: 0 0 0 3px rgba(220,38,38,0.9) inset; }
+    60% { transform: translateX(-4px); box-shadow: 0 0 0 3px rgba(220,38,38,0.7) inset; }
+    80% { transform: translateX(4px); box-shadow: 0 0 0 3px rgba(220,38,38,0.5) inset; }
+}
+.team-slot.dup-reject { animation: dupReject 0.4s ease-in-out; }

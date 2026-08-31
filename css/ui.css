@@ -1,0 +1,1913 @@
+/* --- ui.css : UIパーツ・画面表示 --- */
+
+/* =========================================
+   1. タイトル画面 & 共通設定
+   ========================================= */
+
+@keyframes floatLogo {
+    from { transform: translateY(0); }
+    to { transform: translateY(-10px); }
+}
+
+/* 親：全画面の背景用コンテナ */
+#start-screen {
+    width: 100vw;
+    height: 100vh;
+    overflow: hidden;
+    padding: 0 !important;
+}
+
+#start-content-wrapper {
+    position: absolute;
+    top: 50%; /* 基準を真ん中に打つ */
+    left: 50%;
+    width: 1260px;
+    height: 900px;
+    /* 読み込み直後からこの位置に固定する */
+    transform: translate(-50%, -50%) scale(1);
+
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+    padding-top: 100px; /* 位置を少し下げて落ち着かせる */
+    z-index: 10;
+}
+
+.title-logo {
+    /* 最初から「小さいサイズ」で描画させ、JSとのギャップを埋める */
+    width: 500px;
+    max-width: 100%;
+    height: auto;
+    margin-bottom: 20px;
+    animation: floatLogo 5s ease-in-out infinite alternate;
+    will-change: transform;
+    transform: translateZ(0);
+}
+
+/* メインのスタートボタンもサイズダウン */
+.main-start-btn {
+    font-size: 2.3rem;
+    padding: 14px 55px;
+    border-width: 5px;
+}
+
+/* 設定・座学ボタンエリア（幅を 220px → 180px に） */
+.sub-btn-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 150px;
+    margin-top: 10px;
+}
+
+.sub-btn {
+    width: 100%;
+    margin: 0 0 1px 0;
+    font-size: 1.2rem; /* ボタン内の文字も少し小さく */
+}
+
+.sub-caption {
+    font-size: 0.8rem;
+    color: #555;
+    text-align: center;
+    width: 100%;
+}
+
+/* フッターを画面中央に完全固定 */
+.version-info {
+    position: absolute;
+    bottom: 30px;
+    left: 0;
+    width: 100%;
+    text-align: center;
+
+    font-size: 0.9rem;
+    font-family: sans-serif;
+    color: #555;
+    pointer-events: none;
+}
+
+/* =========================================
+   2. キャラクター選択画面
+   ========================================= */
+
+/* --- タイトルとヘッダー周り --- */
+#char-title-container {
+    position: absolute;
+    top: 35px; /* 上からの余白を固定値に変更 */
+    left: 0;
+    width: 100%;
+    height: 170px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    z-index: 50;
+    pointer-events: none;
+}
+#char-title-container h1 {
+    font-size: 6rem;
+    background: rgba(243, 236, 216, 0.8);
+    padding: 0 20px 0px 20px;
+    margin-bottom: 10px;
+    pointer-events: auto;
+    line-height: 1.1;
+}
+
+.char-select-title-img {
+    height: 100px; /* 縮小版を採用 */
+    width: auto;
+    filter: drop-shadow(2px 2px 0 #ccc);
+    margin-bottom: 15px;
+    pointer-events: auto;
+}
+
+.char-select-desc {
+    font-size: 1.3rem;
+    font-weight: bold;
+    color: #333;
+    background: transparent;
+}
+
+/* --- アイコングリッド --- */
+#icon-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 10px;
+    position: absolute;
+    top: 570px !important; /* 位置をpxで固定 */
+    left: 50% !important;
+    transform: translate(-50%, -50%) scale(0.95) !important;
+    width: max-content;
+    z-index: 20;
+    background: none;
+}
+
+/* 1. アイコン本体 */
+.char-select-icon {
+    width: 100px; height: 100px;
+    background-color: #fdfbf5;
+    border-radius: 0;
+    border: 5px solid #111;
+    cursor: grab;
+    position: relative;
+    background-size: contain;
+    background-position: center bottom;
+    background-repeat: no-repeat;
+    transition: transform 0.1s, border-color 0.2s, box-shadow 0.2s;
+    box-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
+    z-index: 1;
+    padding: 4px;
+    background-origin: content-box;
+    background-clip: padding-box;
+    transform: scale(1) translateZ(0);
+    backface-visibility: hidden;
+    will-change: transform;
+}
+
+/* 2. 内側の細い線 */
+.char-select-icon::after {
+    content: '';
+    position: absolute;
+    top: 2px; left: 2px; right: 2px; bottom: 2px;
+    border: 2px solid #111;
+    pointer-events: none;
+    z-index: 2;
+}
+
+/* 3. ホバー・アクティブ状態 */
+.char-select-icon:not(.inactive):hover {
+    transform: scale(1.1);
+    z-index: 10;
+}
+.char-select-icon:active { cursor: grabbing; }
+
+/* 非アクティブ状態 */
+.char-select-icon.inactive {
+    cursor: default;
+    background-color: #ddd;
+    background-image: repeating-linear-gradient(45deg, transparent, transparent 5px, #bbb 5px, #bbb 10px);
+    border-color: #bbb;
+    opacity: 0.3;
+    pointer-events: none !important;
+}
+.char-select-icon.inactive::after { border-color: #bbb; }
+
+/* --- 選択状態の表現（枠線色） --- */
+
+/* P1選択中（青） */
+.char-select-icon.p1-active {
+    border-color: #1e50a2 !important;
+    box-shadow: 0 0 15px rgba(30, 80, 162, 0.8) !important;
+}
+.char-select-icon.p1-active::after { border-color: #1e50a2 !important; }
+
+/* P2選択中（赤） */
+.char-select-icon.p2-active {
+    border-color: #b94047 !important;
+    box-shadow: 0 0 15px rgba(185, 64, 71, 0.8) !important;
+}
+.char-select-icon.p2-active::after { border-color: #b94047 !important; }
+
+/* 同キャラ選択時（青赤ハーフ） */
+.char-select-icon.p1-active.p2-active {
+    border-top-color: #1e50a2 !important;
+    border-left-color: #1e50a2 !important;
+    border-bottom-color: #b94047 !important;
+    border-right-color: #b94047 !important;
+    box-shadow: 0 0 15px rgba(30, 80, 162, 0.8), 0 0 15px rgba(185, 64, 71, 0.8) !important;
+}
+.char-select-icon.p1-active.p2-active::after {
+    border-top-color: #1e50a2 !important;
+    border-left-color: #1e50a2 !important;
+    border-bottom-color: #b94047 !important;
+    border-right-color: #b94047 !important;
+}
+
+/* --- ドラッグ＆プレビューエリア --- */
+
+/* ドラッグ中のゴースト */
+#drag-ghost {
+    position: fixed; top: 0; left: 0;
+    width: 100px; height: 100px;
+    background-size: contain;
+    background-repeat: no-repeat;
+    background-position: center;
+    pointer-events: none;
+    z-index: 9999;
+    display: none;
+    opacity: 0.8;
+    transform: translate(-50%, -50%) scale(1.2);
+    filter: drop-shadow(0 10px 10px rgba(0,0,0,0.5));
+}
+
+/* プレビューエリア全体 */
+#preview-area {
+    position: absolute;
+    top: 0; left: 0;
+    width: 1260px !important;
+    height: 900px !important;
+    display: block !important;
+    pointer-events: none;
+}
+
+/* カード風プレビューボックス */
+.preview-box {
+    position: absolute;
+    top: 63%; /* 後半の値を採用 */
+    transform: translateY(-50%);
+    width: 400px;
+    height: 600px;
+    background: url('../assets/img/rikishiflame.png') no-repeat center/100% 100%;
+    padding: 35px 25px;
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+    filter: drop-shadow(0 10px 20px rgba(0,0,0,0.6));
+    transition: all 0.3s;
+    z-index: 5;
+}
+/* ここから追加 */
+.preview-box::after {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: url('../assets/img/rikishiflame2.png') no-repeat center/100% 100%;
+    pointer-events: none; /* 枠越しでも中のキャラをドラッグ・クリックできるようにする */
+    z-index: 100; /* 文字やキャラ画像よりもさらに前面に持ってくる */
+}
+
+/* ボックス配置 */
+.p1-box { left: -10px; } /* 後半の値を採用 */
+.p2-box { right: -10px; } /* 後半の値を採用 */
+
+/* 力士画像（アニメーション＆位置調整） */
+.preview-char-img .rikishi-body {
+    position: relative;
+    z-index: 10;   /* 背景より手前 */
+    top: 140px;    /* 力士の位置を下に動かす */
+}
+
+/* 力士の頭（配置調整） */
+.preview-char-img .head {
+    top: -45px;
+    width: 100px; height: 100px;
+    cursor: grab;
+    transition: opacity 0.2s;
+    pointer-events: auto;
+    position: absolute;
+    z-index: 10;
+    left: 50%; /* 左右中央 */
+    transform: translateX(-50%) translateY(-33px); /* 後半の値を採用 */
+}
+.preview-char-img .head:active { cursor: grabbing; }
+.head.dragging-source { opacity: 0.3; }
+
+/* --- 親枠（位置基準・アイコン配置の基準点） --- */
+.preview-char-img {
+    width: 90%;
+    height: 40%;
+    margin-top: 145px;
+    position: relative;
+    overflow: visible !important; /* はみ出したアイコンを表示する */
+    z-index: 100 !important;
+    display: flex;
+    justify-content: center;
+}
+
+/* --- 背景（固定・動かない） --- */
+.char-background {
+    position: absolute;
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    width: 285px;
+    height: 296px;
+    background-repeat: no-repeat;
+    background-size: cover;
+    background-position: center;
+    z-index: 0;
+}
+
+/* --- ★新設：アニメーション用ラッパー（これが揺れる） --- */
+.anim-wrapper {
+    position: relative;
+    z-index: 10;
+    width: auto;
+    height: auto;
+
+    /* 力士の位置調整はここで行う */
+    top: -100px;
+
+    /* 重要: 子要素の変形を維持する */
+    transform-style: preserve-3d;
+}
+
+/* タイプ別登場アニメーション（dock〜）と待機呼吸モーション（idleBreath）の
+   keyframes・基本クラスは team.css 側で一括定義（個人戦・団体戦共通） */
+
+/* 登場アニメクラスを持っているのは .anim-wrapper なので、それ経由でdelayを指定 */
+.preview-char-img.is-selected .anim-wrapper.dock-tech .rikishi-body { animation-delay: 0.6s; }
+.preview-char-img.is-selected .anim-wrapper.dock-power .rikishi-body { animation-delay: 0.6s; }
+.preview-char-img.is-selected .anim-wrapper.dock-speed .rikishi-body { animation-delay: 0.4s; }
+
+/* --- 情報・ステータスエリア --- */
+.preview-info {
+    /* コンテナ自体の設定 */
+    position: absolute; /* 親要素(.preview-box)の左上を基準にする */
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+
+    /* 中身の配置には関与せず、単なる座標基準になる */
+    display: block;
+    pointer-events: none; /* 前面にあってもクリックを邪魔しない */
+    z-index: 50;
+}
+
+/* 1. 四股名（自由配置） */
+.preview-name {
+    position: absolute;
+    /* 座標指定: ここで場所を自由に決められます */
+    top: 69px;
+    left: 30px;
+    width: 100%; /* 幅を広げて中央揃えを有効にする */
+
+    text-align: center;
+
+    /* !important をつけて base.css の設定を強制上書き */
+    font-family: "M PLUS Rounded 1c", sans-serif !important;
+    font-size: 1.8rem;
+    font-weight: 800 !important;
+
+    color: #fff;
+    -webkit-text-stroke: 1px #000;
+    text-shadow: 2px 2px 0 #000, -1px -1px 0 #000;
+    line-height: 1.0;
+
+    z-index: 101;
+    margin: 0; /* マージンでの位置調整は廃止 */
+}
+
+/* --- タイプ・思考バッジ（個別自由配置） --- */
+
+/* 共通スタイル（見た目） */
+.preview-badge-type,
+.preview-badge-ai {
+    font-family: "M PLUS Rounded 1c", sans-serif !important;
+    position: absolute;
+    z-index: 51;
+
+    /* バッジの見た目 */
+    padding: 3px 12px;
+    border-radius: 4px;
+    font-size: 0.8rem;
+    white-space: nowrap; /* 折り返し禁止 */
+}
+
+/* 1. タイプ（例：スピード、パワー） */
+.preview-badge-type {
+    font-family: "M PLUS Rounded 1c", sans-serif !important;
+    /* 座標指定 */
+    top: 44px;
+    left: 270px;  /* 左からの位置 */
+    font-size: 0.74rem;
+    color: #ffe100;
+    font-weight: 500; /* ここを追加（細くする） */
+}
+
+/* 2. 思考（例：思考：変則） */
+.preview-badge-ai {
+    font-family: "M PLUS Rounded 1c", sans-serif !important;
+    /* 座標指定 */
+    top: 99px;
+    left: 270px; /* タイプの右側に配置 */
+    color: #ffffff;
+    font-size: 0.74rem;
+    font-weight: 500; /* ここを追加（細くする） */
+}
+.type-kanji-icon {
+    position: absolute;
+    top: -121px;       /* 枠の上にはみ出させる */
+    left: 13px;      /* 枠の左にはみ出させる */
+    width: 50px;      /* 画像サイズ（調整してください） */
+    height: auto;
+    z-index: 20;      /* 背景やキャラより手前に */
+    pointer-events: none; /* クリックを邪魔しない */
+    filter: drop-shadow(2px 2px 2px rgba(0,0,0,0.3)); /* 視認性を上げる影 */
+}
+
+/* 3. ステータスグリッド（既存のまま） */
+.preview-stat-grid {
+    position: absolute;
+    bottom: 34px;
+    left: 124px;
+
+    display: flex;
+    flex-direction: column;
+    gap: 0px;
+
+    width: auto;
+    margin: 0;
+    padding: 0;
+
+    font-size: 0.8rem;
+    font-family: "M PLUS Rounded 1c", sans-serif!important;
+    font-weight: 800;
+
+    background: none;
+    border: none;
+    color: #fff;
+
+    z-index: 50;
+}
+
+/* 行のレイアウト */
+.stat-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 140px;
+    height: 1.4em; /* 行の高さを固定して、中のフォントサイズや太さによるブレを防ぐ */
+    padding: 0;
+    border: none;
+    -webkit-text-stroke: 1px black;
+    paint-order: stroke;
+}
+
+/* 右側の数値エリア（箱）の設定 */
+.stat-row span:last-child {
+    display: inline-block; /* 箱として扱う */
+    width: 30px;           /* 幅を固定 */
+    text-align: center;    /* 中央揃え */
+    line-height: 1.0;      /* 行間を詰める */
+}
+
+/* 数値の色分け */
+/* display: inline-block を削除しました。これでレイアウト崩れがなくなります */
+.stat-high {
+    color: #00bfff; /* 水色 */
+    font-weight: 800;
+}
+
+.stat-low {
+    color: #ff0000; /* 赤 */
+    font-weight: 800;
+}
+/* どすこいパワー（数値のみ・右下配置） */
+.dosukoi-power-container {
+
+    position: absolute;
+    bottom: 22px;    /* 下位置 */
+    right:18px;     /* 右位置（枠に合わせて調整してください） */
+
+    display: flex;
+    justify-content: center; /* コンテナ内で中央揃え */
+    align-items: center;
+
+    /* 幅を固定して、その中で中央揃えにする */
+    width: 140px;
+    height: 80px;    /* 高さも確保 */
+
+    margin: 0;
+    padding: 0;
+
+    background: none;
+    border: none;
+    z-index: 50;
+
+    /* 確認用: 位置調整が終わったら消してください */
+    /* border: 1px solid red; */
+}
+
+/* 画像は非表示 */
+.dosukoi-power-container img,
+.dosukoi-label-img {
+    display: none !important;
+}
+
+/* 数値のデザイン */
+.dosukoi-value {
+    display: block;
+    width: 100%;             /* 親の幅いっぱいに広げる */
+    text-align: center;      /* 文字を中央揃え */
+
+    font-family: "M PLUS Rounded 1c", sans-serif;
+    font-weight: bold;
+
+    /* 文字サイズをさらに巨大化 */
+    font-size: 3rem;
+
+    /* 文字の間隔をギュッと詰める */
+    letter-spacing: -3px;
+
+    /* 行の高さも詰める */
+
+    color: #fffb02;
+    -webkit-text-stroke: 0px;
+
+    -webkit-text-stroke: 4px black;
+    paint-order: stroke;
+
+}
+
+/* --- 右上「相撲形式」＆戻るボタン --- */
+#sumo-format-container {
+    position: absolute;
+    top: 10px;   /* 後半の値を採用 */
+    right: 10px; /* 後半の値を採用 */
+    z-index: 300;
+    left: auto !important;
+}
+.back-to-top-btn:not(.format-btn) {
+    position: absolute;
+    top: 10px;   /* 後半の値を採用 */
+    left: 10px;  /* 後半の値を採用 */
+    right: auto;
+    z-index: 300;
+    min-width: 140px;
+    text-align: center;
+}
+.format-btn {
+    position: relative !important;
+    top: auto !important;
+    right: auto !important;
+    left: auto !important;
+    min-width: 140px;
+    text-align: center;
+}
+
+/* 設定ポップオーバー（相撲形式）。画面外にはみ出さないよう右揃え */
+#format-popover {
+    display: none;
+    position: absolute;
+    top: 100%;
+    right: 0 !important;
+    left: auto !important;
+    margin-top: 10px;
+    width: 320px;
+    min-width: 240px;
+    background: #fdfaf4; /* 和風の背景色 */
+    border: 2px solid var(--border-color);
+    border-radius: 6px;
+    padding: 25px 20px 15px 20px; /* 上部に✕ボタン用の余白を確保 */
+    box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+    flex-direction: column;
+    gap: 15px;
+    z-index: 100;
+}
+#format-popover.active {
+    display: flex;
+    animation: popIn 0.2s ease-out;
+}
+.popover-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 1.0rem;
+}
+
+/* --- CPUスイッチコンテナ --- */
+.cpu-switch-container {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    position: absolute;
+    top: 6px;
+    right: 230px;
+    z-index: 20001 !important;
+    background: transparent;
+    border: none;
+    pointer-events: auto !important;
+}
+
+.switch-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 10px; /* 要素間の間隔 */
+}
+
+/* PlayerとCPU、共通のテキストスタイル */
+/* --- ラベルの基本設定とアニメーション --- */
+.player-label-text,
+.cpu-label-text {
+    font-family: "M PLUS Rounded 1c", sans-serif;
+    font-size: 1.1rem;
+    font-weight: 800;
+    color: #ffffff;
+    white-space: nowrap;
+    -webkit-text-stroke: 4px black;
+    paint-order: stroke;
+
+    /* スムーズに薄くするためのアニメーション */
+    transition: opacity 0.3s ease, filter 0.3s ease;
+}
+
+/* 選択されていない側のラベルは縁取り（ストローク）を弱めて控えめに見せる */
+.cpu-switch-container:has(input:checked) .player-label-text,
+.cpu-switch-container:not(:has(input:checked)) .cpu-label-text {
+    -webkit-text-stroke: 2px rgba(0,0,0,0.5);
+}
+
+/* --- スイッチ本体 --- */
+.switch {
+    position: relative;
+    display: inline-block;
+    width: 45px;
+    height: 20px;
+}
+.switch input { opacity: 0; width: 0; height: 0; }
+
+.slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0; left: 0; right: 0; bottom: 0;
+    transition: .4s;
+    border-radius: 34px;
+}
+
+/* ベースカラー：P1は青、P2は赤 */
+.p1-switch .slider { background-color: #1976d2; } /* P1 Player色 */
+.p2-switch .slider { background-color: #d32f2f; } /* P2 Player色 */
+
+/* つまみ（白い丸） */
+.slider:before {
+    position: absolute;
+    content: "";
+    height: 20px;
+    width: 20px;
+    left: -2px;
+    bottom: 0px;
+    background-color: rgb(220, 220, 220);
+    transition: .4s;
+    border-radius: 50%;
+    z-index: 2;
+}
+
+/* ON（CPU）時の背景色：紫で固定 */
+input:checked + .slider {
+    background-color: #505050 !important; /* 両プレイヤー共通 */
+    box-shadow: 0 0 10px rgba(61, 61, 61, 0.5);
+}
+
+/* ON時のつまみの移動 */
+input:checked + .slider:before {
+    /* 幅45px、つまみ20px、開始位置-2px なので 27~28px移動で右端 */
+    transform: translateX(28px);
+}
+
+/* --- プルダウン (Select) 共通設定 --- */
+.custom-select {
+    height: 35px;               /* コンテナの高さを少し詰め気味に設定 */
+    font-size: 0.85rem;         /* 1.1remだと30px前後の高さでは大きすぎるので少し縮小 */
+    line-height: 1;             /* 行の高さを最小限にして垂直中央に寄せやすくする */
+    padding: 0 10px 0 5px;      /* 上下パディングを0にして、左右だけで調整 */
+    color: #333333;
+    background-color: rgba(255, 255, 255, 0.95);
+    font-family: "M PLUS Rounded 1c", sans-serif;
+    font-weight: bold;
+    cursor: pointer;
+    outline: none;
+    width: auto !important;
+    white-space: nowrap;
+}
+
+/* 追加：CPUトグルの横にあるプルダウン"だけ"を右に配置する */
+.cpu-switch-container .custom-select {
+    position: absolute;
+    left: 100%;
+    top: 50%;
+    transform: translateY(-50%);
+    margin-left: 15px;
+}
+/* 操作バッジ（右下・どすこいパワーの上） */
+.preview-badge-control {
+    position: absolute;
+    right: 27px;      /* 右端からの距離 */
+    bottom: 103px;     /* どすこいパワー(約50px)の上に置くための数値 */
+
+    font-family: "M PLUS Rounded 1c", sans-serif;
+    font-size: 0.9rem;
+    font-weight: 800;
+    color: #ffffff;
+
+    padding: 2px 8px;
+    border-radius: 4px;
+    display: flex;
+    justify-content: center; /* 中の要素を水平中央に */
+    align-items: center;     /* 中の要素を垂直中央に */
+    width: 120px;
+    z-index: 5;
+    pointer-events: none;
+}
+/* --- レーダーチャートのスタイル --- */
+.radar-chart-container {
+    position: absolute;
+    top: 450px;           /* 名前の下あたり。レイアウトに合わせて微調整してください */
+    right: 238px;          /* 右側に寄せる */
+    width: 126px;         /* 少し大きくします */
+    height: 126px;
+    z-index: 20 !important; /* preview-info内でも最前面に */
+    overflow: visible;     /* 線の端が切れないように */
+    display: block;        /* 確実に表示 */
+}
+
+.radar-svg {
+    width: 120%;
+    height: 100%;
+    overflow: visible;
+}
+
+/* 3. 背景のガイド線（白だと背景画像で見えにくいので、少し濃くします） */
+.radar-guide {
+    stroke: rgb(63, 62, 62,0.5);
+    fill: rgba(255, 255, 255, 0.5);
+    stroke-width: 1;
+}
+/* --- 基準値5の点線（最前面） --- */
+.radar-guide-mid {
+    stroke: rgba(0, 0, 0, 0.9); /* 点線の色。紫の上で目立つように白や明るいグレーがおすすめ */
+    fill: none;                        /* 塗りつぶしは無し（下の紫を見せるため） */
+    stroke-width: 1;                 /* 線の太さ */
+    stroke-dasharray: 1 2;             /* ここで点線（破線）にします (線の長さ 隙間の長さ) */
+    pointer-events: none;
+}
+
+/* 4. 各軸の線 */
+.radar-axis {
+    stroke: rgb(0, 0, 0,0.1);
+    stroke-width: 1;
+}
+
+/* 5. ステータスを示すポリゴン（金色の不透明度を上げ、目立たせる） */
+.radar-poly {
+    fill: #745399 !important; /* 金色の塗り。0.4から0.6へ */
+    stroke-width: 3;                         /* 線を太くして強調 */
+    stroke-linejoin: round;
+    filter: drop-shadow(0 0 3px rgba(0,0,0,0.5)); /* 影をつけて浮き上がらせる */
+    transform-origin: 50px 50px; /* SVGの中心(size=100の半分)を指定 */
+    animation: radar-grow 1s ease-out forwards;
+}
+@keyframes radar-grow {
+    0% {
+        transform: scale(0);
+        opacity: 0;
+    }
+    100% {
+        transform: scale(1);
+        opacity: 1;
+    }
+}
+
+/* --- 未選択時のドッキングガイド（顔） --- */
+.empty-dock-face {
+    position: absolute;
+    top: 145px;
+    left: 100px;
+    width: 50%;
+    height: 40%;
+
+    /* 画像のパスとサイズ。枠(400x600)と同じサイズの画像なら 100% 100% でピッタリです */
+    background: url('../assets/img/dockface.png') no-repeat center/100% 100%;
+
+    pointer-events: none; /* 顔をドロップする時の邪魔にならないようにする */
+    z-index: 10; /* 黒い背景より上、他のUIの下あたりに調整 */
+
+    /* 2秒かけて infinite(無限に) ease-in-out(ふんわりと) アニメーションを繰り返す */
+    animation: dock-blink 4s infinite ease-in-out;
+}
+
+/* 優しく点滅するアニメーション（透明度を変化させる） */
+@keyframes dock-blink {
+    0%   { opacity: 0; }  /* 最も薄い時 */
+    50%  { opacity: 0.33; }  /* 最も濃い時（1.0だと眩しすぎる場合は調整してください） */
+    100% { opacity: 0; }
+}
+
+/* =========================================
+   BGMモーダル用 CSS (完全・安定版)
+   ========================================= */
+
+/* --- 1. 背景のオーバーレイ --- */
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(0, 0, 0, 0.85);
+    display: none;
+    justify-content: center;
+    align-items: center;
+    z-index: 99999;
+    backdrop-filter: blur(2px);
+}
+.modal-overlay.active {
+    display: flex;
+    animation: fadeIn 0.2s ease;
+}
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+#bgm-modal, #bgm-modal * {
+    font-family: "M PLUS Rounded 1c", sans-serif !important;
+    font-weight: 800;
+}
+
+/* --- 2. モーダルウィンドウ本体 --- */
+#bgm-modal .modal-window {
+    width: 90% !important;
+    max-width: 1200px !important;
+    height: 80vh !important;
+    min-height: 500px;
+    max-height: 800px;
+    background-color: #222;
+    border: 3px solid #745399;
+    border-radius: 10px;
+    color: #fff;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    position: relative;
+}
+
+/* --- 3. ヘッダー --- */
+.modal-header {
+    flex-shrink: 0;
+    padding: 15px 25px;
+    background: #333;
+    border-bottom: 2px solid #555;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+.modal-header h2 {
+    margin: 0;
+    font-size: 1.8rem;
+    color: #745399;
+}
+.close-btn {
+    background: transparent;
+    border: none;
+    color: #fff;
+    font-size: 2rem;
+    cursor: pointer;
+    transition: color 0.2s;
+}
+.close-btn:hover { color: #d32f2f; }
+
+/* --- 4. ボディ (スクロールエリア) --- */
+.scrollable-body {
+    flex-grow: 1;
+    overflow-y: auto;
+    padding: 25px; /* ここで余白を作っています */
+    background: #1a1a1a;
+}
+.view-container {
+    animation: slideIn 0.3s ease;
+}
+@keyframes slideIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* --- アルバム一覧 --- */
+.album-category-title {
+    font-size: 1.6rem;
+    color: #fff;
+    font-weight: bold;
+    margin: 30px 0 20px 0;
+    padding-top: 15px;
+    border-top: 2px solid #555;
+    text-align: left;
+}
+.album-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+    gap: 25px;
+    justify-content: start;
+    align-content: start;
+}
+.album-item {
+    background: #333333;
+    padding: 12px;
+    border-radius: 5px;
+    cursor: pointer;
+    display: flex;
+    width: 110%;
+    flex-direction: column;
+    align-items: flex-start;
+    text-align: center;
+}
+.album-item:hover {
+    transform: scale(1.05);
+    border-color: #ffd700;
+    background: #444;
+}
+.album-item.selected-album {
+    border-color: #745399;
+    background: #745399;
+    box-shadow: 0 0 10px rgba(255, 255, 255, 0.4);
+}
+.album-item.selected-album div { color: #ffffff; }
+.album-item img {
+    width: 100%;
+    aspect-ratio: 1;
+    object-fit: cover;
+    border-radius: 4px;
+    margin-bottom: 10px;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.4);
+}
+.album-item div {
+    font-size: 1.3rem;
+    font-weight: 400;
+    line-height: 1.3;
+    width: 100%;
+}
+
+/* --- 曲一覧 --- */
+.track-header-sticky {
+    position: sticky;
+    top: -25px;
+    margin: -25px -25px 20px -25px;
+    padding: 15px 25px;
+    background: #2a2a2a;
+    border-bottom: 2px solid #555;
+    z-index: 10;
+    text-align: center;
+}
+.back-btn {
+    position: absolute;
+    left: 25px;
+    top: 50%;
+    transform: translateY(-50%);
+    padding: 8px 16px;
+    background: #555;
+    border: none;
+    color: white;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 1.4rem;
+}
+.back-btn:hover { background: #777; }
+
+.album-title-display {
+    display: inline-block;
+    font-size: 1.4rem;
+    color: #745399;
+    margin: 0;
+    line-height: 1.5;
+    max-width: auto;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    vertical-align: middle;
+}
+
+.track-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+.track-item {
+    padding: 15px;
+    border-bottom: 1px solid #444;
+    cursor: pointer;
+    transition: background 0.2s;
+    font-size: 1.3rem;
+}
+.track-item:hover { background: #333; }
+.track-item.selected {
+    background: #745399;
+    border-left: 10px solid #3a007c;
+    font-weight: bold;
+}
+
+/* --- 5. フッター (ここが消えていました) --- */
+.modal-footer {
+    flex-shrink: 0;
+    padding: 15px 25px;
+    background: #333;
+    border-top: 2px solid #555;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    z-index: 10;
+}
+
+#bgm-status-text {
+    font-size: 1.6rem;
+    color: #fff;
+    font-weight: bold;
+    margin: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 50%;
+    text-align: left;
+}
+
+/* --- 6. ボタンデザイン (ここも消えていました) --- */
+.track-btn-group {
+    display: flex;
+    gap: 12px;
+}
+.preview-btn, .confirm-btn {
+    width: 120px;
+    padding: 8px 0;
+    text-align: center;
+    font-size: 1.5rem;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: transform 0.1s, background 0.2s;
+    border: none;
+    color: #000 !important;
+    font-weight: 800 !important;
+}
+.preview-btn {
+    background-color: #e0e0e0;
+    border-bottom: 3px solid #999;
+}
+.preview-btn:hover:not(:disabled) { background-color: #d5d5d5; transform: translateY(-2px); }
+.preview-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+.preview-btn.is-playing {
+    background-color: #745399;
+}
+.preview-btn.is-playing:hover { background-color: #ffa726; }
+
+.confirm-btn {
+    background-color: #ffd700;
+    border-bottom: 3px solid #b8860b;
+}
+.confirm-btn:hover { background-color: #ffeb3b; transform: translateY(-2px); }
+
+/* スクロールするテキスト本体（省略記号 ... を絶対に出さない） */
+#current-album-title,
+#bgm-status-text {
+    text-overflow: clip !important;
+    white-space: nowrap !important;
+    display: inline-block !important;
+    overflow: visible !important;
+    flex-shrink: 0;
+    will-change: transform;
+    padding-right: 0px;
+}
+
+#current-album-title {
+    font-size: 2.2rem;
+    color: #ffffff;
+    line-height: 1.5;
+}
+
+#bgm-status-text {
+    font-size: 1.6rem;
+    color: #fff;
+    font-weight: bold;
+    margin: 0;
+}
+
+/* =========================================
+   3. スタートボタン（帯）エリア
+   ========================================= */
+#start-btn-container {
+    position: absolute;
+    top: 100px;
+    left: 0; width: 100%;
+    text-align: center;
+    z-index: 20000;
+
+    /* 背景を透明にし、クリックスルーを有効化 */
+    background: transparent !important;
+    border: none;
+    padding: 0;
+    box-shadow: none !important;
+
+    display: none;
+    animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    flex-direction: column;
+    align-items: center;
+
+    /* 重要: 画像以外のエリアはクリックを通す */
+    pointer-events: none;
+}
+#start-btn-container[style*="display: block"], #start-btn-container[style*="display: flex"] { display: flex !important; }
+@keyframes popIn { from{transform:translateY(-20px) scale(0.9); opacity:0;} to{transform:translateY(0) scale(1); opacity:1;} }
+
+.custom-select { appearance: none; -webkit-appearance: none; background-color: #fff; border: 2px solid #ccc; border-radius: 4px; padding: 5px 30px 5px 15px; font-family: 'Yuji Syuku', serif; font-size: 1.6rem; font-weight: bold; color: #333; cursor: pointer; background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23333' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e"); background-repeat: no-repeat; background-position: right 8px center; background-size: 16px; margin: 0 10px; }
+.custom-select:disabled { background-color: #d1d5db; color: #6b7280; cursor: not-allowed; border-color: #9ca3af; opacity: 0.8; }
+
+/* スタートボタン（画像のコンテナとして機能） */
+.start-big-btn {
+    /* 背景・枠線・影を全廃止 */
+    background: none !important;
+    border: none !important;
+    box-shadow: none !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+
+    /* 横幅いっぱいに広げる */
+    width: 100% !important;
+    padding: 0 !important;
+    margin: 0 !important;
+
+    cursor: pointer;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    outline: none !important;
+
+    /* 画像部分はクリック可能 */
+    pointer-events: auto;
+
+    transition: transform 0.1s;
+}
+.start-big-btn:hover {
+    transform: scale(1.05);
+    background: none !important;
+}
+.start-big-btn:active {
+    transform: scale(0.95);
+}
+
+/* =========================================
+   4. エフェクト・トランジション
+   ========================================= */
+
+#transition-curtain {
+    position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 99999;
+    background: url('../assets/img/maku.png') no-repeat center center;
+    background-size: cover;
+    transform: translateX(-105%);
+    pointer-events: none;
+}
+#transition-curtain.active { animation: curtainAnim 1.5s cubic-bezier(0.22, 1, 0.36, 1) forwards; }
+@keyframes curtainAnim {
+    0% { transform: translateX(-105%); }
+    35% { transform: translateX(0%); }
+    65% { transform: translateX(0%); }
+    100% { transform: translateX(105%); }
+}
+
+/* UI Layer (In-Game) */
+.ui-layer {
+    display: flex;
+    justify-content: space-between;
+    width: 1200px;
+    border: 4px
+    solid var(--border-color);
+    background: var(--bg-paper);
+    padding: 10px;
+}
+#ui-layer::before {
+    content: "";
+    position: absolute;
+
+    /* 外側の線と内側の線の「隙間」の広さ（例：3px） */
+    top: 4px;
+    bottom: 4px;
+    left: 4px;
+    right: 4px;
+
+    /* 内側の細い線（例：1pxの黒） */
+    border: 1px solid var(--ink-black);
+
+    /* マウス操作の邪魔にならないようにする必須設定 */
+    pointer-events: none;
+    z-index: 10;
+}
+
+.gauge-container { width: 48%; padding: 0 5px; }
+.rikishi-info { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+.rikishi-name { font-size: 2rem;}
+.win-count { font-size: 1.5rem; background: #fff; padding: 2px 8px; border: 2px solid var(--ink-black); border-radius: 4px; line-height: 1.2; }
+.stamina-outer { height: 20px; background: #e5e5e5; border: 2px solid var(--ink-black); position: relative; overflow: hidden; }
+.gauge-container:last-child .stamina-outer { margin-left: auto; }
+.stamina-inner { height: 100%; width: 100%; position: absolute; left: 0; top: 0; transition: width 0.1s; }
+.charge-outer { width: 100%; height: 10px; border: 2px solid var(--ink-black); margin-top: 4px; overflow: hidden; background: linear-gradient(to right, #e5e5e5 49.5%, #888 50%, #e5e5e5 50.5%); }
+.charge-inner { height: 100%; width: 0%; background: var(--charge-color); transition: background-color 0.2s; }
+.charge-inner.max-charge { background-color: #dc2626 !important; box-shadow: 0 0 10px #dc2626; }
+.charge-outer.locked { opacity: 0.5; }
+.charge-inner.locked { background-color: #777 !important; box-shadow: none !important; }
+
+/* Controls Info */
+#controls-info { display: flex; width: 1200px; border: 4px solid var(--border-color); background: #f2f2f2; justify-content: space-between; }
+#controls-info::before {
+    content: "";
+    position: absolute;
+
+    /* 外側の線と内側の線の「隙間」の広さ（例：3px） */
+    top: 4px;
+    bottom: 4px;
+    left: 4px;
+    right: 4px;
+
+    /* 内側の細い線（例：1pxの黒） */
+    border: 1px solid var(--ink-black);
+
+    /* マウス操作の邪魔にならないようにする必須設定 */
+    pointer-events: none;
+    z-index: 10;
+}
+.control-box { width: 49%; padding: 15px; display: flex; flex-direction: column; gap: 10px; }
+.control-separator { width: 2px; background: var(--border-color); margin: 10px 0; }
+.control-title { color: var(--p1-color); font-weight: 900; border-bottom: 1px solid #000; margin-bottom: 5px; font-size: 1.8rem; }
+.key { display: inline-block; padding: 2px 8px; background: #fff; border: 2px solid var(--ink-black); border-radius: 4px; font-weight: bold; font-family: monospace; }
+.control-row { margin-bottom: 5px; font-size: 1.1rem; }
+/* =========================================
+   戦闘画面：操作説明エリアの顔アイコン
+========================================= */
+.control-face-icon {
+    width: 90px;
+    height: 90px;
+    background-size: contain;
+    background-position: center bottom;
+    background-repeat: no-repeat;
+    /* 軽く影をつけて立体感を出す */
+    filter: drop-shadow(2px 2px 2px rgba(0,0,0,0.3));
+}
+
+/* P2の顔は画面の内側（左）を向くように反転させる */
+.p2-face {
+    transform: scaleX(-1);
+}
+/* =========================================
+   戦闘画面：操作説明のキーボード風レイアウト
+========================================= */
+.control-layout {
+    display: flex;
+    align-items: center;
+    gap: 100px;
+}
+.p1-layout { justify-content: flex-start; }
+.p2-layout { justify-content: flex-end; }
+
+.key-visual-grid {
+    padding-top: 15px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 5px;
+}
+.key-row-top { display: flex; justify-content: center; }
+.key-row-bottom { display: flex; justify-content: center; gap: 5px; }
+
+/* 立体感のあるキーブロック */
+.key.block-key {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 50px;
+    height: 50px;
+    padding: 0 5px;
+    font-size: 1.4rem;
+    border-radius: 8px;
+    box-shadow: 0 4px 0 #999;
+    transform: translateY(-4px); /* 影の分、少し浮かせる */
+    margin: 0;
+}
+
+.key-desc-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    font-size: 1.15rem;
+    font-weight: bold;
+    color: #333;
+}
+
+/* 説明用の小さなキー（元のデザインを維持しつつ調整） */
+.key.mini-key {
+    min-width: 30px;
+    padding: 4px 6px;
+    font-size: 0.95rem;
+    text-align: center;
+    box-shadow: none;
+    transform: none;
+    vertical-align: middle;
+    margin: 0;
+}
+
+.key-area {
+    display: inline-flex;
+    align-items: center;
+    justify-content: flex-start;
+    width: 85px; /* ここを固定することで、後ろの文字の開始位置が完璧に揃います */
+    gap: 4px;
+}
+
+.key-desc-list > div {
+    display: flex;
+    align-items: center;
+    height: 35px; /* 行の高さを揃えてガタつきを防止 */
+    font-size: 1.2rem;
+}
+
+/* P2側：日本語が左、キーが右の時に、日本語の左端が揃うように調整 */
+.p2-layout .key-desc-list {
+    text-align: left; /* P2も日本語の開始位置（左側）を揃える */
+}
+
+/* P1側（左側）のキーの塊を右に寄せる */
+.p1-layout .key-visual-grid {
+    margin-left: 25px; /* ここを 40px, 60px, 80px などと増やすことで右に寄ります */
+}
+
+/* ついでに P2側（右側）も左に寄せてバランスを取りたい場合はこちら */
+.p2-layout .key-visual-grid {
+    margin-right: 25px;
+}
+
+/* Result Overlay */
+#day-overlay { position: absolute; inset: 0; background: #000; color: #fff; display: flex; align-items: center; justify-content: center; font-size: 5rem; font-weight: 900; z-index: 2000; opacity: 0; pointer-events: none; transition: opacity 0.5s ease; }
+#day-overlay.visible { opacity: 1; pointer-events: auto; }
+#day-overlay.instant { transition: none; opacity: 1; pointer-events: auto; }
+#result-overlay { position: absolute; inset: 0; background: rgba(0,0,0,0.85); display: flex; opacity: 0; pointer-events: none; flex-direction: column; align-items: center; justify-content: center; z-index: 150; backdrop-filter: blur(5px); transition: opacity 0.4s ease-in; overflow: hidden; }
+#result-overlay.visible { opacity: 1; pointer-events: auto; }
+#result-overlay.final-mode #match-info { position: absolute; inset: 0; width: 100%; height: 100%; display: flex; justify-content: center; align-items: center; z-index: 50; margin: 0; }
+#final-btn-container { position: absolute; bottom: 15%; width: 100%; display: none; justify-content: center; gap: 20px; z-index: 100; }
+#kimarite-display { font-size: 3.5rem; color: #fff; margin-bottom: 10px; text-shadow: 0 0 20px var(--p2-color); text-align: center; width: 100%; }
+#win-message { font-size: 6rem; color: gold; margin-bottom: 20px; text-shadow: 0 0 30px rgba(0,0,0,0.5); text-align: center; width: 100%; }
+#match-info { font-size: 2rem; color: #fff; margin-bottom: 30px; text-align: center; width: 100%; display: flex; align-items: center; justify-content: center; }
+
+#esc-hint { position: absolute; top: 20px; right: 20px; font-size: 1.0rem; color: #fff; font-weight: bold; text-shadow: 2px 2px 0 #000; animation: blinkHint 3s infinite; }
+@keyframes blinkHint { 0%,100%{opacity:0.7;} 50%{opacity:1;} }
+#result-overlay.final-mode #esc-hint { display: none; }
+
+/* Pause Menu */
+#pause-menu {
+    position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: 10001;
+    display: none; align-items: center; justify-content: center;
+    backdrop-filter: blur(4px);
+}
+#pause-menu.active { display: flex; }
+.pause-box {
+    width: 600px;
+    background: var(--bg-paper);
+    border: 16px solid var(--ink-black);
+    padding: 30px; text-align: center; border-radius: 0;
+    box-shadow: 0 0 30px rgba(0,0,0,0.5); position: relative;
+}
+.pause-box::after {
+    content: ""; position: absolute; inset: 4px;
+    border: 4px solid var(--ink-black);
+    pointer-events: none;
+}
+.pause-title { font-size: 3rem; font-weight: 900; margin-bottom: 30px; border-bottom: 2px solid #ccc; padding-bottom: 10px; }
+.pause-btn-list { display: flex; flex-direction: column; gap: 15px; }
+
+/* Settings Modal */
+#settings-modal {
+    position: fixed; inset: 0; background: rgba(0,0,0,0.8); z-index: 10005;
+    display: none; align-items: center; justify-content: center;
+    backdrop-filter: blur(4px);
+}
+#settings-modal.active { display: flex; }
+.settings-box {
+    width: 1000px;
+    max-height: 90vh;       /* 画面の高さを超えないように制限 */
+    background: var(--bg-paper);
+    border: 16px solid var(--ink-black);
+    border-radius: 0;
+    box-shadow: 0 0 50px rgba(0,0,0,0.8);
+    position: relative;
+    padding: 0;             /* paddingは内側の箱に任せる */
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;       /* ボックス全体はスクロールさせない */
+}
+
+/* 2. 前面に固定される内側の細い線 */
+.settings-box::after {
+    content: "";
+    position: absolute;
+    top: 4px; left: 4px; right: 4px; bottom: 4px;
+    pointer-events: none; /* マウス操作の邪魔にならないように */
+    border: 4px solid var(--ink-black);
+    z-index: 100; /* ボタンや文字より「手前」に表示！ */
+    display: block !important;
+}
+
+/* 中身の箱（ここだけがスクロールする） */
+.settings-content {
+    flex: 1;
+    overflow-y: auto;
+    padding: 40px;
+}
+.setting-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; font-size: 1.6rem; font-weight: bold; }
+.setting-val-group { display: flex !important; align-items: center !important; gap: 20px !important; margin: 0 !important; }
+.volume-val { display: inline-block; width: 3ch; text-align: right; }
+#setting-screen-size { min-width: 400px; }
+.setting-hr { border: 0; border-top: 2px solid #ccc; margin: 40px 0; }
+.key-config-section { margin-bottom: 40px; }
+.key-config-title { font-size: 2rem; font-weight: 900; margin-bottom: 15px; border-bottom: 3px solid #000; padding-bottom: 5px; }
+.key-grid {
+    display: grid;
+    grid-template-columns: 140px 1fr 140px 1fr;
+    gap: 20px 30px;
+    align-items: center;
+    font-size: 1.5rem;
+    font-weight: bold;
+    white-space: nowrap;
+}
+.key-btn {
+    padding: 8px 10px; font-family: 'Yuji Syuku', serif; font-size: 1.6rem; font-weight: bold; cursor: pointer;
+    border: 3px solid #000; background: #fff; width: 100%;
+}
+.key-btn:hover { background: #eee; }
+.key-btn.waiting { background: #fbbf24; border-color: #d97706; animation: blinkKey 1s infinite; }
+@keyframes blinkKey { 50% { opacity: 0.5; } }
+
+.settings-actions { display: flex; justify-content: center; gap: 30px; margin-top: 50px; flex-shrink: 0; /* 画面が縮んでもボタンエリアが潰れないように保護 */ }
+.settings-actions .btn { font-size: 1.2rem; padding: 10px 20px; width: auto; white-space: nowrap; }
+
+/* トースト通知 */
+.toast-notification {
+    position: fixed; top: 20px; left: 50%; transform: translateX(-50%);
+    background: rgba(0, 0, 0, 0.8); color: #fff; padding: 15px 30px;
+    border-radius: 8px; font-size: 1.4rem; font-weight: bold;
+    z-index: 20000; opacity: 0; transition: opacity 0.3s;
+    pointer-events: none; white-space: nowrap;
+    border: 2px solid #fff; box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+}
+.toast-notification.show { opacity: 1; animation: toastPop 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+@keyframes toastPop {
+    from { transform: translate(-50%, -20px); opacity: 0; }
+    to { transform: translate(-50%, 0); opacity: 1; }
+}
+
+/* 隠しキャラ用のクラス */
+.secret-hidden {
+    opacity: 0 !important;       /* 完全に透明にする */
+    pointer-events: none;        /* クリックやドラッグを無効化 */
+    filter: blur(10px);          /* ぼかし（演出用、なくてもOK） */
+    transition: all 1.0s ease;   /* 解放時にふわっと現れるアニメーション */
+}
+
+/* 解放された時の演出クラス（JSで付け外し） */
+.secret-reveal {
+    opacity: 1 !important;
+    pointer-events: auto !important;
+    filter: blur(0) !important;
+    animation: reveal-shine 0.5s ease-out;
+}
+
+@keyframes reveal-shine {
+    0% { transform: scale(0.5); filter: brightness(3); }
+    100% { transform: scale(1); filter: brightness(1); }
+}
+
+.hp-text {
+    position: absolute;
+    top: 50%;
+    /* 50%（中央）指定を削除し、個別指定へ */
+
+    z-index: 10;
+    pointer-events: none;
+    font-family: 'M PLUS Rounded 1c', sans-serif;
+    font-size: 0.85rem;
+    font-weight: 800; /* 10から太字に変更 */
+    color: #ffffff;
+    opacity: 0.66;
+
+    /* 改行を防止 */
+    white-space: nowrap;
+    width: max-content;
+    margin: 0;
+}
+
+/* P1: 左端から10pxの位置 */
+#p1-hp-text {
+    left: 10px;
+    transform: translateY(-50%);
+}
+
+/* P2: 外側（右端）に寄せる */
+#p2-hp-text {
+    /* P2の親要素(stamina-outer)は scaleX(-1) で反転しているため、
+       ここでの left は視覚的な「右側」を指します。 */
+    left: 10px;
+    /* 文字の鏡像を直しつつ、上下中央に配置 */
+    transform: translateY(-50%) scaleX(-1);
+}
+
+.key-config-accordion {
+    width: 100%;
+    margin-top: 15px; /* 上の項目との隙間 */
+    /* 背景と枠線を消してスッキリさせる */
+    border: none;
+    background: transparent;
+}
+
+.accordion-summary {
+    padding: 0; /* 余計なパディングを消す */
+    font-size: 1.5rem; /* 他のラベル(label)とサイズ感を合わせる */
+    font-weight: bold;
+    cursor: pointer;
+    list-style: none; /* デフォルトの矢印を消す */
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    color: #000000;
+}
+
+/* 右側の▼アイコンとテキスト */
+.accordion-summary::after {
+    content: '変更する ▼';
+    font-size: 1.3rem;
+    color: #000000;
+}
+
+/* 開いている時は文字と矢印を切り替え（回転なし） */
+.key-config-accordion[open] .accordion-summary::after {
+    content: '閉じる ▲';
+    transform: none;
+}
+
+/* 区切り線を復活（色を確実に指定） */
+.accordion-content {
+    padding: 15px 0 0 0;
+    margin-top: 10px;
+    /* var(--border-color) ではなく、確実に見えるグレー（#999）で直接指定します */
+    border-top: 1px dashed #999;
+}
+
+#char-select-screen > .back-to-top-btn {
+    left: 40px !important;
+    right: auto !important;
+}
+
+/* ✕ボタンのデザイン（絶対に消えないCSS図形方式） */
+.popover-close-btn {
+    position: absolute;
+    top: 5px;
+    right: 5px;
+    width: 30px;
+    height: 30px;
+    cursor: pointer;
+    z-index: 9999 !important;
+
+    /* 元の文字（✕）は悪さをしないように完全に隠す */
+    font-size: 0 !important;
+    color: transparent !important;
+    text-shadow: none !important;
+}
+
+/* バツ印の線（2本）をCSSで描画 */
+.popover-close-btn::before,
+.popover-close-btn::after {
+    content: "";
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 20px;   /* バツ印の大きさ */
+    height: 3px;   /* 線の太さ */
+    background-color: #333333; /* 線の色（黒） */
+    border-radius: 2px;
+    transition: background-color 0.2s;
+}
+
+/* 線を45度と-45度に回転させてクロスさせる */
+.popover-close-btn::before {
+    transform: translate(-50%, -50%) rotate(45deg);
+}
+.popover-close-btn::after {
+    transform: translate(-50%, -50%) rotate(-45deg);
+}
+
+/* マウスを乗せた時に線を赤くする */
+.popover-close-btn:hover::before,
+.popover-close-btn:hover::after {
+    background-color: #b94047;
+}
+
+.popover-close-btn:hover {
+    color: #000;
+}
+
+/* 各行をFlexboxで綺麗に左右に振り分ける */
+.popover-row {
+    display: flex;
+    justify-content: space-between; /* ラベルは左、入力欄は右に配置 */
+    align-items: center; /* 縦方向の中央揃え */
+    margin-top: 15px;
+    margin-bottom: -20px;
+}
+
+.popover-row:last-child {
+    margin-bottom: 10px;
+}
+
+.popover-row label {
+    font-size: 1.00rem;
+    color: #333;
+    margin: 10px;
+}
+
+/* セレクトボックスの微調整 */
+#match-count-select {
+    margin-right: 15px;
+    font-size: 1rem;
+    cursor: pointer;
+}
+
+#deuce-check {
+    /* 大きさを1.3倍にする（以前のHTML指定の復元） */
+    transform: scale(1.3);
+
+    /* 位置を左に寄せる（右側に余白を作る） */
+    /* 上のセレクトボックスの右端と合うように、10px〜15px前後で微調整してください */
+    margin-right: 19px;
+    margin-bottom: 0px;
+
+    /* チェック時の色を紫色にする */
+    /* #6a0dad (少し深めの紫) や purple、#8a2be2 など好きな色を指定できます */
+    accent-color: #745399;
+
+    cursor: pointer;
+}
+*:has(> #deuce-check) {
+    padding-top: 15px !important;
+    padding-bottom: 20px !important;
+}
+
+input[type="range"] {
+    /* ブラウザ標準の「青色」を「江戸紫」に書き換える魔法の1行 */
+    accent-color: #745399;
+
+    /* マウスを乗せた時に「指マーク」にして操作しやすくする */
+    cursor: pointer;
+}
+
+/* ※もしスライダーの操作中（アクティブ時）に影などを付けたい場合は以下も追加 */
+input[type="range"]:active {
+    filter: brightness(0.9);
+}
+
+/* --- BGMポップアップ --- */
+#bgm-toast {
+    position: absolute;
+    top: 45px;
+    right: 0px;
+    background: rgba(0, 0, 0, 0.75);
+    color: #fff;
+    padding: 4px 15px;
+    font-family: 'M PLUS Rounded 1c', sans-serif;
+    font-size: 1rem;
+    z-index: 20000;
+    pointer-events: none;
+    white-space: nowrap;
+
+    transform: translateX(100%);
+    transition: transform 1.5s cubic-bezier(0.22, 1, 0.36, 1);
+    will-change: transform;
+    backdrop-filter: blur(4px);
+}
+
+#bgm-toast.show {
+    transform: translateX(0);
+}
+
+/* --- プルダウンの見た目を完全に統一 --- */
+.custom-select {
+    appearance: none;
+    -webkit-appearance: none;
+    border: 2px solid #333 !important; /* しっかりした黒枠 */
+    border-radius: 6px;
+    padding: 6px 30px 6px 12px !important; /* 内側の余白を統一 */
+    font-size: 1rem !important; /* 文字の大きさを統一 */
+    font-family: inherit;
+    background-color: #fff;
+    /* 右側の矢印アイコンを自作 */
+    background-image: url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2224%22%20height%3D%2224%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22%23333%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cpolyline%20points%3D%226%209%2012%2015%2018%209%22%3E%3C%2Fpolyline%3E%3C%2Fsvg%3E');
+    background-repeat: no-repeat;
+    background-position: right 8px center;
+    background-size: 14px;
+    cursor: pointer;
+    color: #333;
+    outline: none;
+}
+
+.custom-select:focus {
+    border-color: #000 !important;
+}
+
+/* --- 音量のサブ項目用デザイン --- */
+.volume-sub-group {
+    margin-bottom: 30px;
+    padding-left: 40px; /* 全体を少し右にズラしてインデント（字下げ）する */
+}
+
+/* 各設定行のコンテナ（右寄せ） */
+.setting-sub-row {
+    display: flex !important;
+    justify-content: flex-end !important;
+    align-items: center !important;
+    gap: 15px !important;            /* 文字とスライダーの隙間 */
+    margin-bottom: 15px;
+    padding-right: 20px !important;  /* 画面の右端にくっつきすぎないよう余白 */
+
+    font-size: 1.2rem; /* 大項目(1.6rem)より少し小さくする */
+    font-weight: bold;
+    color: #444; /* 文字色を少し薄くしてサブ感を出す */
+}
+
+.setting-sub-row:last-child {
+    margin-bottom: 0; /* 一番下のスキマを詰める */
+}
+
+/* 「音楽」「効果音」「声」の文字部分 */
+.setting-sub-row label {
+    text-align: right !important;
+    width: 80px !important;
+    margin: 0 !important;
+    font-size: 1.2rem;
+}
+/* =========================================
+   背景の和柄（テクスチャ）と重なり順の指定
+========================================= */
+
+/* 1. タイトル画面（青海波） */
+#start-screen::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100' height='50' viewBox='0 0 100 50'%3E%3Cg stroke='%23000' stroke-width='1.5' fill='%23f3ecd8'%3E%3Ccircle cx='25' cy='0' r='25'/%3E%3Ccircle cx='25' cy='0' r='20'/%3E%3Ccircle cx='25' cy='0' r='15'/%3E%3Ccircle cx='25' cy='0' r='10'/%3E%3Ccircle cx='25' cy='0' r='5'/%3E%3Ccircle cx='75' cy='0' r='25'/%3E%3Ccircle cx='75' cy='0' r='20'/%3E%3Ccircle cx='75' cy='0' r='15'/%3E%3Ccircle cx='75' cy='0' r='10'/%3E%3Ccircle cx='75' cy='0' r='5'/%3E%3Ccircle cx='0' cy='25' r='25'/%3E%3Ccircle cx='0' cy='25' r='20'/%3E%3Ccircle cx='0' cy='25' r='15'/%3E%3Ccircle cx='0' cy='25' r='10'/%3E%3Ccircle cx='0' cy='25' r='5'/%3E%3Ccircle cx='50' cy='25' r='25'/%3E%3Ccircle cx='50' cy='25' r='20'/%3E%3Ccircle cx='50' cy='25' r='15'/%3E%3Ccircle cx='50' cy='25' r='10'/%3E%3Ccircle cx='50' cy='25' r='5'/%3E%3Ccircle cx='100' cy='25' r='25'/%3E%3Ccircle cx='100' cy='25' r='20'/%3E%3Ccircle cx='100' cy='25' r='15'/%3E%3Ccircle cx='100' cy='25' r='10'/%3E%3Ccircle cx='100' cy='25' r='5'/%3E%3Ccircle cx='25' cy='50' r='25'/%3E%3Ccircle cx='25' cy='50' r='20'/%3E%3Ccircle cx='25' cy='50' r='15'/%3E%3Ccircle cx='25' cy='50' r='10'/%3E%3Ccircle cx='25' cy='50' r='5'/%3E%3Ccircle cx='75' cy='50' r='25'/%3E%3Ccircle cx='75' cy='50' r='20'/%3E%3Ccircle cx='75' cy='50' r='15'/%3E%3Ccircle cx='75' cy='50' r='10'/%3E%3Ccircle cx='75' cy='50' r='5'/%3E%3C/g%3E%3C/svg%3E");
+    background-size: 100px 50px;
+    opacity: 0.04;
+    z-index: 0 !important; /* 一番奥に配置 */
+    pointer-events: none;
+}
+
+/* 2. キャラ選択画面（七宝柄） */
+#char-select-screen::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='60' height='60' viewBox='0 0 60 60'%3E%3Cg stroke='%23000' stroke-width='1.5' fill='none'%3E%3Ccircle cx='0' cy='0' r='30'/%3E%3Ccircle cx='60' cy='0' r='30'/%3E%3Ccircle cx='0' cy='60' r='30'/%3E%3Ccircle cx='60' cy='60' r='30'/%3E%3Ccircle cx='30' cy='30' r='30'/%3E%3C/g%3E%3C/svg%3E");
+    background-size: 60px 60px;
+    opacity: 0.04;
+    z-index: 0 !important; /* 一番奥に配置 */
+    pointer-events: none;
+}
+
+/* 1. 不要になった古い指定を無効化 */
+#game-wrapper::before {
+    display: none !important;
+}
+
+body::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+
+    /* ここを「真・矢絣（やがすり）」に差し替え */
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='20' height='40' viewBox='0 0 20 40'%3E%3Cpath d='M0 0 L10 10 V30 L0 20 Z M10 30 L20 20 V40 L10 50 Z M10 -10 L20 -20 V0 L10 10 Z' fill='%23000'/%3E%3C/svg%3E");
+    background-size: 40px 80px; /* 柄の大きさ（お好みで 30px 60px などに変更可） */
+
+    /* 塗りつぶし面積が多いので、他の柄より少し薄め（3%）にするのが綺麗です */
+    opacity: 0.03;
+    z-index: -1 !important;
+    pointer-events: none;
+}
+
+/* 3. 戦闘画面の箱自体の背景色を透明にして、後ろの柄を透かして見せる */
+#game-wrapper {
+    background: transparent !important;
+}
+
+/* 4. 他の画面（タイトル・キャラ選択）で柄が混ざらないよう、背景を完全に不透明にする */
+.screen {
+    background: var(--bg-paper) !important;
+}
+
+/* --- 【重要】模様にUIが潰されないための重なり順（Z-index）調整 --- */
+
+/* タイトルとキャラ選択の中身を確実に手前（10）に出す */
+#start-content-wrapper,
+#select-scaling-wrapper {
+    z-index: 10 !important;
+}
+
+/* 戦闘画面の体力バーや国技館の写真を確実に手前（10）に出す */
+.ui-layer,
+#stage-container,
+#controls-info {
+    position: relative;
+    z-index: 10 !important;
+}
+/* =========================================
+   戦闘画面の上下UI枠（体力バー・操作説明）の背景調整
+========================================= */
+
+/* 2. UI枠を「しっかり透けるガラス」に変更 */
+.ui-layer,
+#controls-info {
+    /* 色の濃さを 0.85 → 0.45 に下げて、透明感を一気に上げる */
+    background: rgba(0, 0, 0, 0.15) !important;
+
+    /* 模様が溶けて消えないように、ぼかしを弱める（6px → 3px） */
+    backdrop-filter: blur(3px);
+    -webkit-backdrop-filter: blur(3px);
+
+    /* 枠線をソリッドな黒（墨色）に */
+    border-color: #0d0d0d !important;
+}
+
+/* レジェンドとドリームの二重枠の隙間を白にする（オーラ配置の基準点も兼ねる） */
+.char-select-icon.cat-legend,
+.char-select-icon.cat-dream {
+    background-color: #ffffff !important;
+    background-clip: padding-box !important;
+    /* オーラを背面に配置するための基準点にする */
+    position: relative;
+    /* オーラが隣のアイコンの下に潜らないよう、少しだけ手前に表示 */
+    z-index: 1;
+}
+
+/* プルダウン本体と、開いた時の選択肢（option）両方にフォントを適用 */
+.custom-select,
+.custom-select option {
+    font-family: 'M PLUS Rounded 1c', sans-serif !important;
+    font-weight: 500 !important;
+}
+
+/* =========================================
+   操作説明のキーボード：押下時のフィードバック
+========================================= */
+/* 元のキーに、滑らかに動くアニメーション設定を追加 */
+.key.block-key {
+    transition: background-color 0.1s, color 0.1s, transform 0.1s, box-shadow 0.1s;
+}
+
+/* 実際にキーが押された時の状態（紫色＋押し込み） */
+.key.block-key.key-pressed {
+    background-color: #745399 !important;     /* スモチャン紫 */
+    color: #ffffff !important;                /* 文字は白抜き */
+    border-color: #4a3363 !important;         /* 枠線も少し濃い紫 */
+
+    /* 影を消して位置を下げることで、物理ボタンを押し込んだように見せる */
+    box-shadow: 0 0 0 transparent !important;
+    transform: translateY(0) !important;      /* 元の -4px から 0 に下げる */
+}
+
+/* --- レジェンド力士：黄金のオーラ --- */
+.preview-box.cat-legend {
+    /* 炎の形に合わせて外側に強い光を放つ */
+    filter: drop-shadow(0 0 20px rgba(255, 215, 0, 0.8))
+    drop-shadow(0 0 40px rgba(255, 165, 0, 0.4)) !important;
+}
+
+/* --- ドリーム力士：紫ピンクのオーラ --- */
+.preview-box.cat-dream {
+    filter: drop-shadow(0 0 20px rgba(234, 96, 158, 0.8))
+    drop-shadow(0 0 40px rgba(136, 72, 152, 0.4)) !important;
+}

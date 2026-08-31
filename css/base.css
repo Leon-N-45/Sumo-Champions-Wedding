@@ -1,0 +1,377 @@
+/* --- base.css : 基本レイアウト・共通パーツ --- */
+@font-face {
+    font-family: 'tamanegi'; /* ここで決めた名前を後で使います */
+    src: url('../assets/fonts/tamanegi.ttf') format('truetype');
+    font-weight: normal;
+    font-style: normal;
+    font-display: swap; /* 読み込み時のチラつき防止 */
+}
+/* 全要素のサイズ計算を「ボーダー込み」にする */
+*, *::before, *::after {
+    box-sizing: border-box;
+}
+
+/* 画像のドラッグ禁止設定 */
+img {
+    -webkit-user-drag: none;
+    -khtml-user-drag: none;
+    -moz-user-drag: none;
+    -o-user-drag: none;
+
+    user-select: none;
+    -webkit-user-select: none;
+    pointer-events: none;
+}
+
+/* 操作が必要な画像は pointer-events を戻す */
+.char-select-icon, .btn img, .preview-char-img .head, .char-select-title-img {
+    pointer-events: auto !important;
+}
+
+:root {
+    --bg-paper: #f3ecd8;
+    --ink-black: #0d0d0d;
+    --border-color: #0d0d0d;
+    --ground: #b28650;
+    --p1-color: #1e3a8a;
+    --p2-color: #b91c1c;
+    --cpu-color: #666666;
+    --cpu-active-color: #d000ff;
+    --charge-color: #fbbf24;
+    --parry-color: #22d3ee;
+    --aura-yellow: #fbbf24;
+    --aura-blue: #0f172a;
+    --purple-obi: #7e22ce;
+}
+
+body {
+    background-color: var(--bg-paper);
+    color: var(--ink-black);
+    font-family: 'tamanegi', serif;
+    margin: 0;
+    width: 100vw; height: 100vh;
+    overflow: hidden;
+    display: flex; align-items: center; justify-content: center;
+    opacity: 1;
+    user-select: none; -webkit-user-select: none;
+}
+
+/* ゲームの外枠 */
+#sumo-frame {
+    position: fixed; inset: 0; z-index: 10000;
+    pointer-events: none;
+    border: 16px solid var(--ink-black);
+}
+#sumo-frame::after {
+    content: ""; position: absolute; inset: 4px;
+    border: 4px solid var(--ink-black);
+}
+
+/* 共通スクリーン設定 */
+.screen {
+    position: fixed; inset: 0;
+    background: rgba(243, 236, 216, 0.98);
+    display: none;
+    flex-direction: column; align-items: center; justify-content: flex-start;
+    padding-top: 40px;
+    z-index: 200;
+}
+.screen.active { display: flex; }
+
+/* ゲーム全体のラッパー */
+#game-wrapper {
+    width: 1240px; height: 900px;
+    position: relative; display: none;
+    flex-direction: column; align-items: center; justify-content: center;
+    gap: 15px; padding: 20px;
+    background: var(--bg-paper);
+    transform-origin: center center;
+}
+
+/* =========================================
+   共通ボタン（スタイリッシュな角削り・八角形風）
+   ========================================= */
+
+.btn {
+    padding: 15px 40px;
+    font-size: 1.8rem;
+    font-family: 'Yuji Syuku', serif;
+    margin: 10px;
+    cursor: pointer;
+
+    /* ボタン本体の背景と枠線を透明にする */
+    background: transparent !important;
+    border: none !important;
+    color: #111;
+
+    /* 擬似要素（背景）を重ねるための基準 */
+    position: relative;
+    z-index: 1;
+    transition: all 0.2s ease;
+
+    transform: translateZ(0);
+    backface-visibility: hidden;
+}
+
+/* 1. 外側の「黒い枠線」になる八角形 */
+.btn::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background-color: var(--ink-black, #111);
+    /* 四隅を15px分だけ斜めにカット */
+    clip-path: polygon(15px 0, calc(100% - 15px) 0, 100% 15px, 100% calc(100% - 15px), calc(100% - 15px) 100%, 15px 100%, 0 calc(100% - 15px), 0 15px);
+    z-index: -2;
+    transition: all 0.2s ease;
+}
+
+/* 2. 内側の「背景色」になる八角形 */
+.btn::after {
+    content: '';
+    position: absolute;
+    /* 外側の黒から4px内側に配置して「4pxの枠線」に見せる */
+    top: 4px; left: 4px; right: 4px; bottom: 4px;
+    background-color: #fdfbf5; /* 和紙色 */
+    /* 内側も同じように斜めにカット（隙間に合わせて少し小さく） */
+    clip-path: polygon(12px 0, calc(100% - 12px) 0, 100% 12px, 100% calc(100% - 12px), calc(100% - 12px) 100%, 12px 100%, 0 calc(100% - 12px), 0 12px);
+    z-index: -1;
+    transition: all 0.2s ease;
+}
+
+/* ホバー時（フワッと浮き上がり、内側が江戸紫に染まる） */
+.btn:hover {
+    transform: translateY(-3px);
+    color: #fff !important;
+}
+.btn:hover::after {
+    background-color: #745399 !important; /* 江戸紫 */
+}
+
+/* クリック時（沈み込む） */
+.btn:active { transform: translateY(2px); }
+
+/* 無効化時 */
+.btn:disabled { opacity: 0.6; cursor: not-allowed; transform: none; color: #888; }
+.btn:disabled::after { background-color: #ddd; }
+
+/* =========================================
+   トップへ戻る・相撲形式ボタン（角削りに統一）
+   ========================================= */
+
+.back-to-top-btn {
+    position: absolute; top: 40px; right: 40px; padding: 10px 20px;
+    font-size: 1.2rem; font-family: 'Yuji Syuku', serif;
+    cursor: pointer; z-index: 300; transition: all 0.2s ease;
+
+    background: transparent !important;
+    border: none !important;
+    color: #111;
+}
+
+.back-to-top-btn::before {
+    content: ''; position: absolute; top: 0; left: 0; right: 0; bottom: 0;
+    background-color: var(--ink-black, #111);
+    clip-path: polygon(10px 0, calc(100% - 10px) 0, 100% 10px, 100% calc(100% - 10px), calc(100% - 10px) 100%, 10px 100%, 0 calc(100% - 10px), 0 10px);
+    z-index: -2; transition: all 0.2s ease;
+}
+
+.back-to-top-btn::after {
+    content: ''; position: absolute; top: 3px; left: 3px; right: 3px; bottom: 3px;
+    background-color: #fdfbf5;
+    clip-path: polygon(8px 0, calc(100% - 8px) 0, 100% 8px, 100% calc(100% - 8px), calc(100% - 8px) 100%, 8px 100%, 0 calc(100% - 8px), 0 8px);
+    z-index: -1; transition: all 0.2s ease;
+}
+
+.back-to-top-btn:hover { transform: translateY(-3px); color: #fff !important; }
+.back-to-top-btn:hover::after { background-color: #745399 !important; }
+.back-to-top-btn:active { transform: translateY(2px); }
+
+/* --- アニメーション・エフェクト定義 --- */
+
+/* ロード画面等の点滅 */
+#network-loading-msg {
+    font-size: 2rem; font-weight: 900; color: #555;
+    animation: blinkText 1.0s infinite alternate;
+    margin-top: 50px;
+}
+@keyframes blinkText { from{opacity:0.3;} to{opacity:1;} }
+
+/* フェードインしながら上昇 */
+.fade-in-up {
+    animation: fadeInUp 0.8s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+@keyframes fadeInUp {
+    from { opacity: 0; transform: translateY(30px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* 準備完了時のオーラエフェクト用アニメーション */
+@keyframes pulse-gentle {
+    0% { transform: scale(1.0); }
+    100% { transform: scale(1.02); } /* ほんの少しだけ動く */
+}
+
+/* 吸い込むようなオーラ（オレンジと金の重ねがけ） */
+@keyframes aura-vacuum {
+    0% {
+        filter: drop-shadow(0 0 2px rgba(255, 69, 0, 0.3));
+    }
+    50% {
+        filter:
+        drop-shadow(0 0 10px rgba(255, 69, 0, 0.8))
+        drop-shadow(0 0 20px rgba(255, 215, 0, 0.5));
+    }
+    100% {
+        filter: drop-shadow(0 0 2px rgba(255, 69, 0, 0.3));
+    }
+}
+
+/* 準備完了画像に適用するクラス */
+.ready-aura {
+    cursor: pointer;
+
+    /* アニメーションは維持しつつ、GPUレイヤーに乗せる */
+    animation:
+    pulse-gentle 1.2s infinite alternate ease-in-out,
+    aura-vacuum 2.0s infinite ease-in-out;
+
+    transition: transform 0.2s;
+    pointer-events: auto !important;
+
+    box-shadow: none !important;
+    background: none !important;
+
+    /* GPUアクセラレーションを有効化（重要） */
+    will-change: transform;
+    transform: translateZ(0);
+}
+
+.ready-aura:active {
+    transform: scale(0.98);
+    /* filterは重いので、opacityで代用する方が軽いです */
+    /* filter: brightness(0.8); */
+    opacity: 0.8; /* 軽快なopacityに変更 */
+}
+
+/* --- 取り組み開始時の黒帯演出 --- */
+
+#char-title-container {
+    transition: all 0.5s ease;
+    position: absolute;
+    /* ここもGPUに乗せておく */
+    will-change: transform;
+}
+
+/* 黒帯背景（グラデーション） */
+.torikumi-obi-mode::before {
+    content: "";
+    display: block;
+    position: absolute;
+    top: 40%;
+
+    /* ここを変更：枠をぶち破って左右に無限に伸ばす！ */
+    width: 6000px;           /* どんな巨大モニターでもカバーできる幅 */
+    left: 50%;               /* 一旦中央に置く */
+    margin-left: -3000px;    /* 幅の半分のマイナス値で、完全な中央揃えにする */
+    /* ここまで */
+
+    height: 290px;
+    transform: translateY(-50%) translateZ(0); /* translateZ(0)を追加 */
+
+    /* グラデーション描画は重いので、一度描いたらGPUにキャッシュさせる */
+    background: linear-gradient(
+        to bottom,
+        rgba(0, 0, 0, 0) 0%,
+        rgba(0, 0, 0, 0.7) 2%,
+        rgba(0, 0, 0, 0.7) 98%,
+        rgba(0, 0, 0, 0) 100%
+    );
+
+    z-index: -1;
+    opacity: 0;
+    animation: fadeInObi 0.5s forwards;
+
+    /* アニメーションするプロパティをブラウザに予告する（劇的に軽くなります） */
+    will-change: transform, opacity;
+}
+
+@keyframes fadeInObi {
+    /* scaleXではなくopacityだけ、あるいはtransform全体で動かす */
+    from { opacity: 0; transform: translateY(-50%) scaleX(0.9) translateZ(0); }
+    to { opacity: 1; transform: translateY(-50%) scaleX(1) translateZ(0); }
+}
+
+/* 準備完了時の画像スタイル */
+.torikumi-obi-mode img {
+    height: 100px !important;  /* ここが原因で強制的に130pxになっていました */
+    width: auto !important;
+    margin-bottom: 15px !important;
+    position: relative;
+    /* 画像の再配置計算を減らす */
+    transform: translateZ(0);
+}
+
+/* 準備完了時のテキストスタイル */
+.torikumi-obi-mode #select-instruction-text {
+    color: #fff !important;
+    background: transparent !important;
+    text-shadow: 3px 3px 0 rgba(0, 0, 0, 0.8);
+    font-size: 1.3rem !important; /* ここも強制されています */
+    position: relative;
+    border: none !important;
+}
+
+.preview-char-img .head,
+.preview-char-img .rikishi-body {
+    filter: none !important;
+}
+
+/* スクロールバー全体を「墨」の色味に統一 */
+::-webkit-scrollbar { width: 10px; }
+::-webkit-scrollbar-track { background: var(--bg-paper); border-left: 1px solid #ccc; }
+::-webkit-scrollbar-thumb {
+    background: #444; /* 墨色 */
+    border-radius: 5px;
+    border: 2px solid var(--bg-paper);
+}
+::-webkit-scrollbar-thumb:hover { background: #745399; /* 江戸紫 */ }
+
+/* --- 指定箇所をたまねぎフォントに変更 --- */
+#network-loading-msg,
+#select-instruction-text,
+.preview-name,
+#day-overlay,
+.rikishi-name,
+#call-display,
+.gyoji-shout,
+#win-message,
+#kimarite-display,
+.winner-anim
+{
+    font-family: 'tamanegi', sans-serif !important;
+}
+
+.preview-stat-grid,       /* パラメータ（チカラなど） */
+.dosukoi-power-container, /* どすこいパワー */
+.cpu-switch-container     /* トグルのCPUという文字など */
+{
+    font-family: 'Yuji Syuku', sans-serif !important;
+}
+
+/* --- 指定した箇所の太字（ボールド）を解除する --- */
+.preview-name,            /* 力士選択画面の力士名 */
+#select-instruction-text  /* 顔をドラッグして… / ↑をクリックして… */
+{
+    font-weight: normal !important;
+}
+
+/* --- 設定画面の太字（ボールド）を解除する --- */
+#settings-modal,
+#settings-modal * {
+    font-weight: normal !important;
+}
+
+/* --- 戦闘画面：操作説明の「P1 操作」などの太字を解除 --- */
+.control-title {
+    font-weight: normal !important;
+}

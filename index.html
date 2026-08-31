@@ -1,0 +1,560 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <title>スモチャン -Sumo Champions- 結婚式Ver</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@400;500;700;800;900&family=Shippori+Mincho:wght@400;800&family=Yuji+Syuku&display=swap" rel="stylesheet">
+  
+  <link rel="stylesheet" href="css/base.css">
+  <link rel="stylesheet" href="css/ui.css">
+  <link rel="stylesheet" href="css/battle.css">
+  <link rel="stylesheet" href="css/team.css">
+</head>
+<body>
+    <div id="sumo-frame"></div>
+
+<div id="team-select-screen" class="screen">
+        <div id="team-select-scaling-wrapper" style="width: 1260px; height: 900px; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); transform-origin: center center; pointer-events: none;">
+            <div style="pointer-events: auto; width: 100%; height: 100%; position: relative;">
+                
+                <div id="team-char-title-container" style="transition: all 0.5s ease; position: absolute; top: 40px; will-change: transform; width: 100%; text-align: center; z-index: 50;">
+                    <img id="team-select-header-img" src="assets/img/rikishisentaku.png" alt="力士選択" class="char-select-title-img">
+                    <div id="team-select-instruction-text" class="char-select-desc">コスト合計が<span style="color:#745399; -webkit-text-stroke:2px #000; font-size:1.6em; font-family:'tamanegi', sans-serif; font-weight:900; padding:0 4px; vertical-align:baseline;">8</span>以下になるように3人組を編成しろ！</div>
+                </div>
+
+                <button class="back-to-top-btn" onclick="location.reload()">戻る</button>
+
+                <div id="sumo-format-container">
+                    <button class="back-to-top-btn format-btn" onclick="game.ui.openBgmModal()">選曲</button>
+                    <button class="back-to-top-btn format-btn" onclick="document.getElementById('team-format-popover').classList.toggle('active')">相撲形式</button>
+                   <div id="team-format-popover" class="format-popover" style="position: absolute; top: 50px; right: 0; background: #fff; border: 3px solid #000; border-radius: 8px; padding: 20px;  z-index: 400; display: none; flex-direction: column; gap: 15px; width: 320px;">
+                        <div class="popover-close-btn" onclick="document.getElementById('team-format-popover').classList.remove('active')" style="cursor:pointer; text-align:right; font-weight:bold;">✕</div>
+                        
+                        <div class="popover-row">
+                            <label>コスト制限</label>
+                            <select id="team-cost-limit-select" class="custom-select" style="font-size: 1.2rem; padding: 5px;">
+                                <option value="5">5</option>
+                                <option value="6">6</option>
+                                <option value="7">7</option>
+                                <option value="8">8</option>
+                                <option value="9"selected>9   ※推奨</option>
+                                <option value="10">10</option>
+                                <option value="11">11</option>
+                                <option value="12">12</option>
+                                <option value="13">13</option>
+                                <option value="14">14</option>
+                                <option value="15">15</option>
+                                <option value="99">∞</option>
+                            </select>
+                        </div>
+                        <div class="popover-row">
+                            <label>取り組み形式</label>
+                            <select id="team-rule-select" class="custom-select" style="font-size: 1.2rem; padding: 5px;">
+                                <option value="nihon" selected>二本先取</option>
+                                <option value="kachinuki">勝ち抜き</option>
+                            </select>
+                        </div>
+                        <div class="popover-row">
+                            <label>力士の重複</label>
+                            <select id="team-dup-select" class="custom-select" style="font-size: 1.2rem; padding: 5px;">
+                                <option value="off" selected>なし</option>
+                                <option value="on">あり</option>
+                            </select>
+                        </div>
+                    </div>
+                    <style>#team-format-popover.active { display: flex !important; }</style>
+                </div>
+
+                <div id="icon-grid" class="char-icon-grid"></div>
+
+                <div id="preview-area" class="team-preview-area">
+                    <div class="team-panel p1-team-panel">
+                        <div class="team-cost-area">
+                            <div id="p1-cost-val" class="cost-val">0 / 8</div>
+                            <div class="team-cost-bar-bg"><div id="p1-cost-bar" class="team-cost-bar-fill"></div></div>
+                        </div>
+                        <div class="team-slots-container">
+                            <div class="slot-wrapper" id="p1-wrapper-0"><div class="team-slot" id="p1-slot-0" data-player="p1" data-index="0"></div></div>
+                            <div class="slot-wrapper" id="p1-wrapper-1"><div class="team-slot" id="p1-slot-1" data-player="p1" data-index="1"></div></div>
+                            <div class="slot-wrapper" id="p1-wrapper-2"><div class="team-slot" id="p1-slot-2" data-player="p1" data-index="2"></div></div>
+                        </div>
+                    </div>
+                    <div class="team-panel p2-team-panel">
+                        <div class="team-cost-area">
+                            <div id="p2-cost-val" class="cost-val">0 / 8</div>
+                            <div class="team-cost-bar-bg"><div id="p2-cost-bar" class="team-cost-bar-fill"></div></div>
+                        </div>
+                        <div class="team-slots-container">
+                            <div class="slot-wrapper" id="p2-wrapper-0"><div class="team-slot" id="p2-slot-0" data-player="p2" data-index="0"></div></div>
+                            <div class="slot-wrapper" id="p2-wrapper-1"><div class="team-slot" id="p2-slot-1" data-player="p2" data-index="1"></div></div>
+                            <div class="slot-wrapper" id="p2-wrapper-2"><div class="team-slot" id="p2-slot-2" data-player="p2" data-index="2"></div></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="team-secret-screen" class="screen">
+      <div id="team-secret-scaling-wrapper" style="width: 1260px; height: 900px; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); transform-origin: center center;">
+          
+          <div id="secret-title-container" style="position: absolute; top: 55px; width: 100%; text-align: center; z-index: 50;">
+              <div id="secret-instruction-text" class="char-select-desc" style="font-family: 'tamanegi', sans-serif; color: #fff; text-shadow: 3px 3px 0 #000; text-align: center; line-height: 1.3;">
+                  <div id="secret-round-name" style="color:#745399; font-size: 6rem;">先鋒戦</div>
+                  <div id="secret-instruction-sub" style="font-size: 1.4rem; margin-top: 18px;">出場させる力士をこっそりキー入力しろ！</div>
+              </div>
+          </div>
+
+          <div class="secret-panels-container">
+              <div class="secret-panel p1-secret-panel">
+                  <div class="secret-player-label" style="color: var(--p1-color);font-family: 'tamanegi', sans-serif; font-size: 2rem;">東</div>
+                  <div id="secret-p1-list" class="secret-char-list"></div>
+                  <div id="secret-p1-ready" class="secret-ready-stamp">選出済</div>
+              </div>
+
+              <div class="secret-vs-mark">VS</div>
+
+              <div class="secret-panel p2-secret-panel">
+                  <div class="secret-player-label" style="color: var(--p2-color);font-family: 'tamanegi', sans-serif; font-size: 2rem;">西</div>
+                  <div id="secret-p2-list" class="secret-char-list"></div>
+                  <div id="secret-p2-ready" class="secret-ready-stamp">選出済</div>
+              </div>
+          </div>
+      </div>
+  </div>
+
+  <div id="toast" class="toast-notification">設定を保存しました</div>
+
+  <div id="start-screen" class="screen active">
+    <div id="start-content-wrapper" style="width: 1260px; height: 900px; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); transform-origin: center center; display: flex; flex-direction: column; align-items: center; justify-content: center;">
+        <img src="assets/img/title.png" alt="スモチャン" class="title-logo">
+        
+        <div style="margin-top: 40px; height: 260px; display: flex; flex-direction: column; align-items: center; justify-content: center;">
+            <div id="network-loading-msg">ネットワーク巡業中…</div>
+
+           <div id="start-btn-group" style="display: none; flex-direction: column; align-items: center; gap: 30px;">
+                
+                <div style="display: flex; gap: 30px;">
+      <button class="btn main-start-btn" onclick="game.goToCharSelect('2P')">個人戦</button>
+<button class="btn main-start-btn" onclick="startTeamMode()">団体戦</button>
+  </div>
+                <div style="display: flex; gap: 40px;">
+                    <div class="sub-btn-container"><button class="btn sub-btn" onclick="settings.openMenu()">設定</button></div>
+                    <div class="sub-btn-container"><button class="btn sub-btn" onclick="window.open('manual.html', '_blank')">座学</button><div class="sub-caption">ゲーム説明はこちら</div></div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="version-info">© 2026 Okami-chan All Rights Reserved. 結婚式Ver (based on Ver.19.9.8)</div>
+  </div>
+
+  <div id="day-overlay"></div>
+  <div id="drag-ghost"></div>
+
+  <div id="settings-modal" class="modal-overlay">
+    <div class="settings-scale-wrapper" style="display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%;">
+        <div class="settings-box" style="margin: 0; max-height: 65vh; width: 850px; max-width: 90vw;">
+            <div class="settings-content">
+                <div class="pause-title">環境設定</div>
+                
+                <div class="setting-row" style="margin-bottom: 10px;">
+                    <label>音量設定</label>
+                </div>
+                
+                <div class="volume-sub-group">
+                    <div class="setting-sub-row">
+                        <label>音楽</label>
+                        <div class="setting-val-group">
+                            <input type="range" id="setting-bgm" min="0" max="100" step="1" value="100"
+                       oninput="document.getElementById('setting-bgm-val').textContent=this.value; if(typeof SoundFX!=='undefined'){ SoundFX.bgmVolume=this.value/100; SoundFX.updateBGMVolume(); } settings.current.volume.bgm=this.value; settings.apply();"
+                       onchange="if(typeof SoundFX!=='undefined'){ if(SoundFX.testAudio) SoundFX.testAudio.pause(); SoundFX.testAudio = new Audio('assets/se/bgmtest.mp3'); SoundFX.testAudio.volume = SoundFX.bgmVolume; SoundFX.testAudio.play().catch(()=>{}); } ">
+                            <span id="setting-bgm-val" class="volume-val">100</span>
+                        </div>
+                    </div>
+
+                    <div class="setting-sub-row">
+                        <label>効果音</label>
+                        <div class="setting-val-group">
+                            <input type="range" id="setting-se" min="0" max="100" step="1" value="100"
+                       oninput="document.getElementById('setting-se-val').textContent=this.value; if(typeof SoundFX!=='undefined') SoundFX.seVolume=this.value/100; settings.current.volume.se=this.value; settings.apply();"
+                       onchange="if(typeof SoundFX!=='undefined'){ if(!SoundFX.ctx) SoundFX.init(); SoundFX.playTone('parry'); }">
+                            <span id="setting-se-val" class="volume-val">100</span>
+                        </div>
+                    </div>
+
+                    <div class="setting-sub-row">
+                        <label>声</label>
+                        <div class="setting-val-group">
+                            <input type="range" id="setting-voice" min="0" max="100" step="1" value="100"
+                                   oninput="document.getElementById('setting-voice-val').textContent=this.value; if(typeof SoundFX!=='undefined') SoundFX.voiceVolume=this.value/100; settings.current.volume.voice=this.value; settings.apply();"
+                                   onchange="if(typeof SoundFX!=='undefined') SoundFX.playVoice('dosukoi'); ">
+                            <span id="setting-voice-val" class="volume-val">100</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="setting-row">
+                    <label>画面サイズ</label>
+                    <select id="setting-screen-size" class="custom-select" style="font-size:1.4rem; padding:5px 15px; opacity:0.5; cursor:not-allowed;" disabled>
+                        <option value="responsive">レスポンシブ (自動)</option>
+                        <option value="fhd">FHD (1920x1080)</option>
+                        <option value="2k">2K (2560x1440)</option>
+                        <option value="4k">4K (3840x2160)</option>
+                    </select>
+                </div>
+
+                <details class="key-config-accordion">
+                    <summary class="accordion-summary">キーコンフィグ</summary>
+                    <div class="accordion-content">
+                        <div class="key-config-section">
+                            <div class="key-config-title" style="color:var(--p1-color)">P1（左側）</div>
+                            <div class="key-grid">
+                                <span>上 (いなし)</span> <button id="key-p1-u" class="key-btn" onclick="settings.startKeyConfig('p1','u',this)">W</button>
+                                <span>下 (溜め)</span> <button id="key-p1-d" class="key-btn" onclick="settings.startKeyConfig('p1','d',this)">S</button>
+                                <span>左 (移動)</span> <button id="key-p1-l" class="key-btn" onclick="settings.startKeyConfig('p1','l',this)">A</button>
+                                <span>右 (移動)</span> <button id="key-p1-r" class="key-btn" onclick="settings.startKeyConfig('p1','r',this)">D</button>
+                            </div>
+                        </div>
+                        <div class="key-config-section">
+                            <div class="key-config-title" style="color:var(--p2-color)">P2（右側）</div>
+                            <div class="key-grid">
+                                <span>上 (いなし)</span> <button id="key-p2-u" class="key-btn" onclick="settings.startKeyConfig('p2','u',this)">Up</button>
+                                <span>下 (溜め)</span> <button id="key-p2-d" class="key-btn" onclick="settings.startKeyConfig('p2','d',this)">Down</button>
+                                <span>左 (移動)</span> <button id="key-p2-l" class="key-btn" onclick="settings.startKeyConfig('p2','l',this)">Left</button>
+                                <span>右 (移動)</span> <button id="key-p2-r" class="key-btn" onclick="settings.startKeyConfig('p2','r',this)">Right</button>
+                            </div>
+                        </div>
+                    </div>
+                </details>
+
+                <hr class="setting-hr">
+
+                <div class="setting-row">
+                    <label>設定の初期化</label>
+                    <button class="btn" style="padding: 9px 20px; font-size: 1.2rem;" onclick="settings.confirmReset()">実行</button>
+                </div>
+            </div>
+            
+        </div> 
+        <div class="settings-actions" style="margin-top: 30px; display: flex; justify-content: center; gap: 30px;">
+            <button class="btn" style="padding: 13px 32px; font-size: 1.4rem;" onclick="settings.saveAndClose()">保存して戻る</button>
+            <button class="btn" style="padding: 13px 32px; font-size: 1.4rem;" onclick="settings.cancelMenu()">キャンセル</button>
+        </div>
+    </div>
+  </div>
+
+  <div id="pause-menu">
+      <div class="pause-box">
+          <div class="pause-title">中断</div>
+          <div class="pause-btn-list">
+              <button class="btn" onclick="game.togglePauseMenu()">取り組みに戻る</button>
+              <button class="btn" onclick="settings.openMenu()">設定</button>
+              <button class="btn" onclick="game.kyujo()">休場（ゲームをやめる）</button>
+          </div>
+      </div>
+  </div>
+
+  <div id="char-select-screen" class="screen">
+    <div id="select-scaling-wrapper" style="width: 1260px; height: 900px; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); transform-origin: center center; pointer-events: none;">
+        
+        <div style="pointer-events: auto; width: 100%; height: 100%; position: relative;">
+            
+            <div id="char-title-container">
+                <img id="select-header-img" src="assets/img/rikishisentaku.png" alt="力士選択" class="char-select-title-img">
+                <div id="select-instruction-text" class="char-select-desc">顔をドラッグして体にドッキングさせろ！</div>
+            </div>
+            
+            <div id="sumo-format-container">
+                <button class="back-to-top-btn format-btn" onclick="game.ui.openBgmModal()">選曲</button>
+                <button class="back-to-top-btn format-btn" onclick="document.getElementById('format-popover').classList.toggle('active')">相撲形式</button>
+
+                <div id="format-popover">
+                    <div class="popover-close-btn" onclick="document.getElementById('format-popover').classList.remove('active')">✕</div>
+                    <div class="popover-row">
+                        <label>取組数</label>
+                        <select id="match-count-select" class="custom-select"></select>
+                    </div>
+                    <div class="popover-row">
+                        <label>優勝決定戦モード</label>
+                        <input type="checkbox" id="deuce-check" checked> 
+                    </div>
+                    <div class="popover-row" style="display:none;">
+                        <label>BGM</label>
+                        <select id="bgm-select" class="custom-select" style="max-width: 160px;">
+                            <option value="random">ランダム</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <button class="back-to-top-btn" onclick="location.reload()">戻る</button>
+            
+            <div id="icon-grid"></div>
+            
+            <div id="preview-area">
+                <div id="preview-p1" class="preview-box p1-box"></div>
+                <div id="preview-p2" class="preview-box p2-box"></div>
+            </div>
+            
+            <div id="start-btn-container">
+                <button class="start-big-btn" onclick="game.startGame()">
+                    <img src="assets/img/battlestart.png" alt="TORIKUMI！" class="torikumi-img">
+                </button>
+            </div>
+        </div>
+    </div>
+  </div>
+
+  <div id="game-wrapper">
+    <div class="ui-layer" id="ui-layer">
+      <div class="gauge-container">
+        <div class="rikishi-info">
+          <div id="p1-name-disp" class="rikishi-name" style="color:var(--p1-color);"></div>
+          <div id="p1-wins" class="win-count">0勝</div>
+        </div>
+        <div id="p1-stamina-outer" class="stamina-outer">
+            <div id="p1-hp-text" class="hp-text">100 / 100</div>
+            <div id="p1-bar" class="stamina-inner" style="background:var(--p1-color)"></div>
+        </div>
+        <div class="charge-outer" id="p1-charge-outer"><div id="p1-charge-bar" class="charge-inner"></div></div>
+      </div>
+      <div style="width: 2px; background: var(--border-color); margin: 0 10px;"></div>
+      <div class="gauge-container" style="text-align: right">
+        <div class="rikishi-info" style="flex-direction: row-reverse;">
+          <div id="p2-name-disp" class="rikishi-name" style="color:var(--p2-color);"></div>
+          <div id="p2-wins" class="win-count">0勝</div>
+        </div>
+        <div id="p2-stamina-outer" class="stamina-outer">
+            <div id="p2-hp-text" class="hp-text">100 / 100</div>
+            <div id="p2-bar" class="stamina-inner" style="background:var(--p2-color)"></div>
+        </div>
+        <div class="charge-outer" id="p2-charge-outer"><div id="p2-charge-bar" class="charge-inner" style="float:right;"></div></div>
+      </div>
+    </div>
+
+    <div id="stage-container">
+      <div id="stage">
+        <div class="ground-area">
+            <div id="line-left" class="boundary-line"></div>
+            <div id="line-right" class="boundary-line"></div>
+            <div id="shikiri-left" class="shikiri-line"></div>
+            <div id="shikiri-right" class="shikiri-line"></div>
+        </div>
+        
+        <div id="gyoji-container">
+            <img id="gyoji-img" src="assets/img/gyouzi_hakkeyoi.png">
+        </div>
+
+        <div id="call-display">はっけよい…</div>
+        <div id="grapple-indicator" class="grappling-anim">寄り！</div>
+        <div id="p1-stun-mark" class="stun-mark">★★★</div><div id="p2-stun-mark" class="stun-mark">★★★</div>
+        
+        <div id="p1" class="rikishi"><div class="rikishi-body"><img src="assets/img/rikiship1.png" class="body-img"><div id="p1-head" class="head"></div></div></div>
+        <div id="p2" class="rikishi"><div class="rikishi-body"><img src="assets/img/rikiship2.png" class="body-img"><div id="p2-head" class="head"></div></div></div>
+      </div>
+
+      <div id="bgm-toast">♪ <span id="bgm-name"></span></div>
+      <div id="result-overlay">
+        <div id="kimarite-display"></div><div id="win-message"></div><div id="match-info"></div>
+        <div id="esc-hint">Esc：中断メニュー</div>
+        <button id="next-btn" class="btn">次の取り組みへ</button>
+      </div>
+    </div>
+
+<div id="controls-info">
+      <div class="control-box" style="flex-direction: row; align-items: center; justify-content: flex-start; gap: 20px;">
+        <div id="p1-control-face" class="control-face-icon"></div>
+        <div style="flex: 1; display:flex; flex-direction:column;">
+            <div class="control-title" style="color:var(--p1-color);"><span id="p1-control-name">P1</span> 操作 <span id="p1-cpu-badge" style="background:#000; color:#fff; font-size:0.6rem; padding:1px 5px; border-radius:4px; display:none;">CPU</span></div>
+            <div id="p1-controls" style="display:flex; flex-direction:column; gap:5px;">
+                <div class="control-row"><span class="key">A</span> <span class="key">D</span> &nbsp; 移動</div>
+                <div class="control-row"><span class="key">W</span> &nbsp; いなし</div>
+                <div class="control-row"><span class="key">S</span> &nbsp; 溜める</div>
+            </div>
+        </div>
+      </div>
+      
+      <div class="control-separator"></div>
+      
+      <div class="control-box" style="flex-direction: row; align-items: center; justify-content: flex-end; gap: 20px; text-align:right;">
+        <div style="flex: 1; display:flex; flex-direction:column; align-items:flex-end;">
+            <div class="control-title" style="color:var(--p2-color); width:100%;"><span id="p2-control-name">P2</span> 操作 <span id="p2-cpu-badge" style="background:#000; color:#fff; font-size:0.6rem; padding:1px 5px; border-radius:4px; display:none;">CPU</span></div>
+            <div id="p2-controls" style="display:flex; flex-direction:column; align-items:flex-end; gap:5px;">
+                <div class="control-row">移動 &nbsp; <span class="key">←</span> <span class="key">→</span></div>
+                <div class="control-row">いなし &nbsp; <span class="key">↑</span></div>
+                <div class="control-row">溜める &nbsp; <span class="key">↓</span></div>
+            </div>
+        </div>
+        <div id="p2-control-face" class="control-face-icon p2-face"></div>
+      </div>
+  </div>
+  </div> <div id="bgm-modal" class="modal-overlay">
+    <div class="modal-window bgm-modal-window">
+        <div class="modal-header">
+            <h2>BGM SELECT <span id="bgm-modal-subtitle" style="font-size: 1.4rem; color: #bbb; margin-left: 15px;">-ALBUM-</span></h2>
+            <button class="close-btn" onclick="game.ui.closeBgmModal()">×</button>
+        </div>
+        
+        <div class="modal-body scrollable-body">
+            <div id="album-view" class="view-container">
+                <div id="album-grid" class="album-grid"></div>
+            </div>
+
+            <div id="track-view" class="view-container" style="display: none;">
+                <div class="track-header-sticky">
+                    <button class="back-btn" onclick="game.ui.showAlbumView()">◀ 戻る</button>
+                    <span id="current-album-title" class="album-title-display"></span>
+                </div>
+                <ul id="track-list" class="track-list"></ul>
+            </div>
+        </div>
+
+        <div class="modal-footer">
+            <div id="bgm-status-text" style="font-weight: bold; color: #fff;">選択中：ランダム</div>
+        </div>
+    </div>
+  </div>
+
+  <div id="transition-curtain"></div>
+
+  <script src="js/config.js"></script>
+  <script src="js/data.js"></script>
+  <script src="js/settings.js"></script>
+  <script src="js/audio.js"></script>
+  <script src="js/player.js"></script>
+  <script src="js/ai.js"></script>
+  <script src="js/ui.js"></script>
+  <script src="js/game.js"></script>
+  <script src="js/team_ui.js"></script>
+  <script src="js/team_game.js"></script>
+  
+  <script>
+    // タイトル画面の「団体戦」ボタンから呼ばれる入口
+    function startTeamMode() {
+        // window.teamGame に統一してガードを入れる
+        if (!window.teamGame) {
+            window.teamGame = new TeamGameManager();
+        }
+
+        // BGMのアンロックと停止処理
+        if (typeof SoundFX !== 'undefined') {
+            if(SoundFX.bgmAudio) SoundFX.bgmAudio.pause();
+            SoundFX.currentRandomBgm = null;
+            if(typeof SoundFX.preloadSelectBGMs === 'function') SoundFX.preloadSelectBGMs();
+            
+            const unlockAudio = (audioObj) => {
+                if (!audioObj) return;
+                const prevVol = audioObj.volume;
+                audioObj.volume = 0; // 無音でアンロック（一瞬のBGM音漏れを防ぐ）
+                const playPromise = audioObj.play();
+                if (playPromise !== undefined) {
+                    playPromise.then(() => {
+                        audioObj.pause();
+                        audioObj.currentTime = 0;
+                        audioObj.volume = prevVol;
+                    }).catch(() => { audioObj.volume = prevVol; });
+                } else {
+                    audioObj.volume = prevVol;
+                }
+            };
+            unlockAudio(SoundFX.openingAudio);
+            unlockAudio(SoundFX.charSelectAudio);
+
+            // 1. ボイスの再生（どすこい等のランダム再生）
+            const sounds = ['dosukoi', 'gottyan', 'maninonrei'];
+            const soundFile = sounds[Math.floor(Math.random() * sounds.length)];
+            const audio = new Audio(`assets/se/${soundFile}.mp3`);
+            audio.volume = SoundFX.voiceVolume !== undefined ? SoundFX.voiceVolume : 1.0;
+            audio.play().catch(()=>{});
+        }
+
+        const curtain = document.getElementById('transition-curtain');
+        if (curtain) {
+            // 2. 幕を閉める
+            curtain.classList.add('active');
+
+            // 3. 幕が閉まりきった暗闇の中(400ms後)で、DOM（画面）を切り替える
+            setTimeout(() => {
+                document.getElementById('start-screen').classList.remove('active');
+                document.getElementById('team-select-screen').classList.add('active');
+            }, 400);
+
+            // 4. 幕を開け、BGMを開始する(1500ms後)
+            setTimeout(() => {
+                curtain.classList.remove('active');
+                playTeamSelectBGM();
+            }, 1500);
+        } else {
+            // 万が一幕の要素が無い場合のフォールバック
+            document.getElementById('start-screen').classList.remove('active');
+            document.getElementById('team-select-screen').classList.add('active');
+            playTeamSelectBGM();
+        }
+
+        // 編成画面用BGMを確実に鳴らす内部関数
+        function playTeamSelectBGM() {
+            if (typeof SoundFX !== 'undefined' && SoundFX.charSelectAudio) {
+                SoundFX.bgmAudio = SoundFX.charSelectAudio;
+                SoundFX.bgmAudio.currentTime = 0;
+                if (SoundFX.bgmVolume !== undefined) {
+                    SoundFX.bgmAudio.volume = SoundFX.bgmVolume * 0.66;
+                }
+                SoundFX.bgmAudio.play().catch(e => console.warn("BGM再生エラー:", e));
+            }
+        }
+    }
+
+    // 各画面の 1260x900 基準ラッパーをウィンドウサイズに合わせて拡縮する
+    function initFastScale() {
+        const baseW = 1260; const baseH = 900; 
+        const winW = window.innerWidth - 60; 
+        const winH = window.innerHeight - 60; 
+        const scale = Math.min(winW / baseW, winH / baseH);
+        
+        const startWrapper = document.getElementById('start-content-wrapper');
+        if (startWrapper) startWrapper.style.transform = `translate(-50%, -50%) scale(${scale})`;
+        
+        const selectWrapper = document.getElementById('select-scaling-wrapper');
+        if (selectWrapper) selectWrapper.style.transform = `translate(-50%, -50%) scale(${scale})`;
+        
+        // 団体戦の編成画面も同様に自動拡縮させる
+        const teamSelectWrapper = document.getElementById('team-select-scaling-wrapper');
+        if (teamSelectWrapper) teamSelectWrapper.style.transform = `translate(-50%, -50%) scale(${scale})`;
+
+        // シークレット選出画面も同様に自動拡縮させる
+        const teamSecretWrapper = document.getElementById('team-secret-scaling-wrapper');
+        if (teamSecretWrapper) teamSecretWrapper.style.transform = `translate(-50%, -50%) scale(${scale})`;
+        
+        const footer = document.querySelector('.version-info');
+        if (footer) {
+            const uiScale = Math.min(scale, 1.0);
+            footer.style.transform = `scale(${uiScale})`;
+        }
+    }
+    initFastScale();
+    window.addEventListener('resize', initFastScale);
+
+    window.addEventListener('load', () => {
+        if (typeof settings !== 'undefined') {
+            settings.apply();
+        }
+    });
+
+    // 相撲形式ポップオーバー：モーダル外（開閉ボタン以外）をクリックしたら閉じる
+    document.addEventListener('click', (e) => {
+        ['format-popover', 'team-format-popover'].forEach((id) => {
+            const pop = document.getElementById(id);
+            if (!pop || !pop.classList.contains('active')) return;
+            if (pop.contains(e.target)) return;
+            if (e.target.closest && e.target.closest('.format-btn')) return;
+            pop.classList.remove('active');
+        });
+    });
+
+    
+  </script>
+  
+</body>
+</html>

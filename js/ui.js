@@ -96,8 +96,8 @@ class UIManager {
         const p1 = this.game.p1 ? this.game.p1.baseStats : null;
         const p2 = this.game.p2 ? this.game.p2.baseStats : null;
 
-        if (this.els.p1Name) this.els.p1Name.textContent = p1 ? p1.name : "P1";
-        if (this.els.p2Name) this.els.p2Name.textContent = p2 ? p2.name : "P2";
+        this.setHudName('p1', p1, "P1");
+        this.setHudName('p2', p2, "P2");
 
         const p1CtrlName = document.getElementById('p1-control-name');
         if (p1CtrlName) p1CtrlName.textContent = p1 ? p1.name : "P1";
@@ -477,8 +477,8 @@ class UIManager {
         this.updateBar(p2, 'p2');
         this.updateRikishi(p1);
         this.updateRikishi(p2);
-        if (this.els.p1Name) this.els.p1Name.textContent = p1.name;
-        if (this.els.p2Name) this.els.p2Name.textContent = p2.name;
+        this.setHudName('p1', p1);
+        this.setHudName('p2', p2);
 
         const p1HpText = document.getElementById('p1-hp-text');
         const p2HpText = document.getElementById('p2-hp-text');
@@ -810,6 +810,39 @@ class UIManager {
         if (type === 'hakkeyoi') this.els.gyoji.src = 'assets/img/gyouzi_hakkeyoi.png';
         if (type === 'nokotta') this.els.gyoji.src = 'assets/img/gyouzi_nokotta.png';
         if (type === 'syoubuari') this.els.gyoji.src = 'assets/img/gyouzi_syoubuari.png';
+    }
+
+    /**
+     * 戦闘画面上部の力士名を設定する。
+     * 二つ名がある場合は小さく添える。左右で対称になるよう内側へ置き、
+     * 力士名そのものは画面の外端に残るようにする。
+     *   side     : 'p1' | 'p2'
+     *   charData : Player でも baseStats でも可（未選択時は null）
+     *   fallback : 力士が未設定のときに出す文字列
+     */
+    setHudName(side, charData, fallback = '') {
+        const el = (side === 'p1') ? this.els.p1Name : this.els.p2Name;
+        if (!el) return;
+
+        if (!charData) { el.textContent = fallback; return; }
+
+        // 呼び出し元によって Player と baseStats のどちらも渡ってくる。
+        // 二つ名は baseStats 側にしか無いため、Player なら中身を取り出す。
+        const data = charData.baseStats || charData;
+
+        const name = data.name || charData.name || fallback;
+        const nick = (data.nickname || '').trim();
+        if (!nick) { el.textContent = name; return; }
+
+        el.textContent = '';
+        const nameNode = document.createTextNode(name);
+        const nickEl = document.createElement('span');
+        nickEl.className = 'hud-nickname';
+        nickEl.textContent = nick;
+
+        // P2は右揃えのため、二つ名を名前の手前（内側）に置く
+        if (side === 'p2') el.append(nickEl, nameNode);
+        else el.append(nameNode, nickEl);
     }
 
     initSelectScreen() {

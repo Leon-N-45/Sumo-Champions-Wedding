@@ -1236,6 +1236,13 @@ input:checked + .slider:before {
 .gauge-container { width: 48%; padding: 0 5px; }
 .rikishi-info { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
 .rikishi-name { font-size: 2rem;}
+
+/* 戦闘画面上部の名前に添える二つ名。名前より小さく、内側に置かれる */
+.hud-nickname {
+    font-size: 0.55em;
+    margin: 0 0.4em;
+    vertical-align: 0.15em;   /* 小さい文字が下に沈んで見えるのを補正 */
+}
 .win-count { font-size: 1.5rem; background: #fff; padding: 2px 8px; border: 2px solid var(--ink-black); border-radius: 4px; line-height: 1.2; }
 .stamina-outer { height: 20px; background: #e5e5e5; border: 2px solid var(--ink-black); position: relative; overflow: hidden; }
 .gauge-container:last-child .stamina-outer { margin-left: auto; }

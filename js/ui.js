@@ -852,8 +852,9 @@ class UIManager {
                     icon.style.backgroundColor = '#ffffff';
                 }
                 else if (charData.category === "ドリーム") {
-                    // 結婚式Verでは解禁手段を設けず、常に非表示とする
-                    classes.push('cat-dream', 'secret-hidden');
+                    // 結婚式Verでは隠し力士の仕組みを廃止したため、常に表示する。
+                    // （カテゴリは紫ピンクのオーラを出すための見た目の指定として残している）
+                    classes.push('cat-dream');
                     icon.style.backgroundColor = '#ffffff';
                 }
                 else if (charData.category === "空きスロット") {

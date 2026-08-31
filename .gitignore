@@ -14,3 +14,6 @@ desktop.ini
 .vscode/
 .idea/
 *.swp
+
+# 開発用サーバ設定（各自の環境依存のため共有しない）
+.claude/launch.json

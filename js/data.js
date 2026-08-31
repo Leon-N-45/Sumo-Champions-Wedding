@@ -62,16 +62,52 @@ function applyConfigValue(key, value) {
     }
 }
 
+/**
+ * シート1枚分のCSVを取得する。
+ *
+ * OFFLINE_MODE が true のときは通信せず data_local.js の内容だけを使う。
+ * false のときはスプシを取りに行き、失敗・遅延した場合は data_local.js へ退避する。
+ * いずれの場合も戻り値はCSVのテキスト（取得できなければ null）。
+ */
+async function getSheetCsv(key) {
+    const local = (typeof LOCAL_CSV !== 'undefined') ? LOCAL_CSV[key] : null;
+
+    if (typeof OFFLINE_MODE !== 'undefined' && OFFLINE_MODE) {
+        if (!local) console.warn(`[offline] ${key} がdata_local.jsにありません。`);
+        return local || null;
+    }
+
+    const url = DATA_URLS[key];
+    if (!url) return local || null;
+
+    // 応答が返らないまま起動が止まるのを防ぐため、必ず時間で打ち切る
+    const limitMs = (typeof FETCH_TIMEOUT_MS !== 'undefined') ? FETCH_TIMEOUT_MS : 5000;
+    const ctrl = new AbortController();
+    const timer = setTimeout(() => ctrl.abort(), limitMs);
+    try {
+        const res = await fetch(url + `&_t=${Date.now()}`, { signal: ctrl.signal });
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        return await res.text();
+    } catch (e) {
+        console.warn(`[${key}] 取得に失敗したためローカルデータを使用します:`, e.message);
+        return local || null;
+    } finally {
+        clearTimeout(timer);
+    }
+}
+
 async function loadExternalData() {
     try {
-        const ts = Date.now();
-        console.log("データの読み込みを開始します...");
+        console.log(
+            (typeof OFFLINE_MODE !== 'undefined' && OFFLINE_MODE)
+                ? "データの読み込みを開始します...(オフライン)"
+                : "データの読み込みを開始します...(スプシ参照)"
+        );
 
         // 1. Configデータの取得
-        if (DATA_URLS.CONFIG) {
-            const res = await fetch(DATA_URLS.CONFIG + `&_t=${ts}`);
-            if (res.ok) {
-                const text = await res.text();
+        {
+            const text = await getSheetCsv('CONFIG');
+            if (text) {
                 // ヘッダーなし、D列(idx 3)がKey, G列(idx 6)がValue
                 const lines = text.trim().split('\n');
                 lines.forEach(line => {
@@ -85,10 +121,9 @@ async function loadExternalData() {
         }
 
         // 2. キャラクターデータの取得
-        if (DATA_URLS.CHARS) {
-            const res = await fetch(DATA_URLS.CHARS + `&_t=${ts}`);
-            if (res.ok) {
-                const text = await res.text();
+        {
+            const text = await getSheetCsv('CHARS');
+            if (text) {
                 const rows = parseCSV(text);
 
                 RIKISHI_DATA = rows.map((row, i) => {
@@ -116,15 +151,16 @@ async function loadExternalData() {
                         };
                     }).filter(d => d !== null);
 
-                RIKISHI_DATA.sort((a, b) => (a.slot || 999) - (b.slot || 999));
+                // Slot未設定(NaN)は末尾へ。0は有効な値なので || で弾かないこと
+                const slotOf = (d) => Number.isFinite(d.slot) ? d.slot : 999;
+                RIKISHI_DATA.sort((a, b) => slotOf(a) - slotOf(b));
                 console.log("キャラクターデータを読み込みました:", RIKISHI_DATA.length + "件");
             }
         }
         // 3. アルバムデータの取得
-        if (DATA_URLS.ALBUMS) {
-            const res = await fetch(DATA_URLS.ALBUMS + `&_t=${ts}`);
-            if (res.ok) {
-                const text = await res.text();
+        {
+            const text = await getSheetCsv('ALBUMS');
+            if (text) {
                 const rows = parseCSV(text);
 
                 ALBUM_DATA = rows.map(row => {
@@ -143,10 +179,9 @@ async function loadExternalData() {
         }
 
         // 4. BGMデータの取得
-        if (DATA_URLS.BGM) {
-            const res = await fetch(DATA_URLS.BGM + `&_t=${ts}`);
-            if (res.ok) {
-                const text = await res.text();
+        {
+            const text = await getSheetCsv('BGM');
+            if (text) {
                 const rows = parseCSV(text);
 
                 BGM_DATA = rows.map(row => {

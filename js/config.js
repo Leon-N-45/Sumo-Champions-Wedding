@@ -40,6 +40,20 @@ const DATA_URLS = {
     ALBUMS: sheetCsvUrl(SHEET_GID.ALBUMS)
 };
 
+// ============================================================
+// ■ オフラインモード
+// ------------------------------------------------------------
+// true  … 通信を一切せず js/data_local.js のデータだけで動く【本番はこちら】
+// false … スプシを参照する。失敗・遅延した場合は data_local.js へ自動的に退避する
+//
+// スプシを編集したら次を実行して data_local.js を焼き直すこと:
+//     node tools/build_data.js
+// ============================================================
+const OFFLINE_MODE = true;
+
+// スプシ参照時の打ち切り時間（ミリ秒）。応答が返らないまま起動が止まるのを防ぐ。
+const FETCH_TIMEOUT_MS = 5000;
+
 // 参照先が通常版のままだと、結婚式Verの調整が通常版へ影響してしまうため警告する
 const IS_WEDDING_SHEET_READY = (SHEET_ID !== NORMAL_SHEET_ID);
 if (!IS_WEDDING_SHEET_READY) {

@@ -1246,35 +1246,66 @@ input:checked + .slider:before {
     box-shadow: 0 0 12px rgba(116, 83, 153, 0.7);
 }
 
-/* 力士選択グリッドのカーソル。1Pと2Pで色を分ける */
-.char-select-icon.nav-cursor-p1,
-.char-select-icon.nav-cursor-p2 {
-    position: relative;
-    z-index: 5;
-}
-.char-select-icon.nav-cursor-p1::before,
-.char-select-icon.nav-cursor-p2::before {
-    content: "";
+/* --- 力士選択グリッドのカーソル ---
+   格闘ゲームの選択画面のように、四隅の鉤枠と 1P/2P の札で現在位置を示す。
+   マスへ吸い付くように動かすため、位置は JS から px で指定する。 */
+.nav-cursor {
     position: absolute;
-    inset: -5px;
-    border-radius: 4px;
+    display: none;
     pointer-events: none;
-    z-index: 6;
-    animation: navCursorPulse 1s ease-in-out infinite;
+    z-index: 30;
+    transition: left .12s ease-out, top .12s ease-out;
 }
-.char-select-icon.nav-cursor-p1::before { border: 4px solid var(--p1-color, #1f5fd0); }
-.char-select-icon.nav-cursor-p2::before { border: 4px solid var(--p2-color, #d02020); }
+/* 1Pは左、2Pは右へずらす。同じ力士を選んでも枠と札が重ならないようにするため */
+.nav-cursor.p1 { margin-left: -9px; }
+.nav-cursor.p2 { margin-left:  9px; }
 
-/* 1Pと2Pが同じマスにいる場合、2P側を少し外側にずらして両方見えるようにする */
-.char-select-icon.nav-cursor-p1.nav-cursor-p2::before { inset: -10px; }
+.nav-cursor .corner {
+    position: absolute;
+    width: 16px;
+    height: 16px;
+    border-style: solid;
+    border-color: inherit;
+    border-width: 0;
+}
+.nav-cursor .tl { top: -5px;    left: -5px;    border-top-width: 5px; border-left-width: 5px; }
+.nav-cursor .tr { top: -5px;    right: -5px;   border-top-width: 5px; border-right-width: 5px; }
+.nav-cursor .bl { bottom: -5px; left: -5px;    border-bottom-width: 5px; border-left-width: 5px; }
+.nav-cursor .br { bottom: -5px; right: -5px;   border-bottom-width: 5px; border-right-width: 5px; }
+
+.nav-cursor .nav-cursor-tag {
+    position: absolute;
+    top: -22px;
+    font-family: 'tamanegi', sans-serif;
+    font-size: 15px;
+    line-height: 1;
+    color: #fff;
+    text-shadow: 1px 1px 0 #000;
+    border: 2px solid #000;
+    border-radius: 3px;
+    padding: 3px 7px 4px;
+    white-space: nowrap;
+}
+/* 札も左右に振り分けて、同じマスにいるとき重ならないようにする */
+.nav-cursor.p1 .nav-cursor-tag { left: -5px; }
+.nav-cursor.p2 .nav-cursor-tag { right: -5px; }
+
+/* 枠の色は border-color、札の背景は個別に指定する
+   （札自身が color:#fff のため currentColor では白になってしまう） */
+.nav-cursor.p1 { border-color: var(--p1-color, #1f5fd0); }
+.nav-cursor.p2 { border-color: var(--p2-color, #d02020); }
+.nav-cursor.p1 .nav-cursor-tag { background: var(--p1-color, #1f5fd0); }
+.nav-cursor.p2 .nav-cursor-tag { background: var(--p2-color, #d02020); }
+
+.nav-cursor .corner { animation: navCursorPulse 1.1s ease-in-out infinite; }
 
 @keyframes navCursorPulse {
     0%, 100% { opacity: 1; }
-    50%      { opacity: 0.35; }
+    50%      { opacity: 0.4; }
 }
 @media (prefers-reduced-motion: reduce) {
-    .char-select-icon.nav-cursor-p1::before,
-    .char-select-icon.nav-cursor-p2::before { animation: none; }
+    .nav-cursor { transition: none; }
+    .nav-cursor .corner { animation: none; }
 }
 
 /* 戦闘画面上部の名前に添える二つ名。名前より小さく、内側に置かれる */

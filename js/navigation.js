@@ -105,7 +105,9 @@ const MenuNav = {
     gridCells() {
         const grid = document.querySelector('#char-select-screen #icon-grid')
                   || document.getElementById('icon-grid');
-        return grid ? [...grid.children] : [];
+        if (!grid) return [];
+        // カーソル自身もグリッドの子になるため、マスの数え上げからは除く
+        return [...grid.children].filter(c => !c.classList.contains('nav-cursor'));
     },
 
     /** その位置の力士が選べるか（空きマスや非表示は飛ばす） */
@@ -144,18 +146,71 @@ const MenuNav = {
             if (this.isSelectable(cells[pos])) {
                 this.cursor[playerId] = pos;
                 this.paintCursors();
+                this.previewUnderCursor(playerId);
                 return true;
             }
         }
         return false;
     },
 
-    paintCursors() {
-        const cells = this.gridCells();
-        cells.forEach((c, i) => {
-                c.classList.toggle('nav-cursor-p1', i === this.cursor.p1);
-                c.classList.toggle('nav-cursor-p2', i === this.cursor.p2);
+    /** カーソル本体を用意する（グリッド内に1P・2P分を1つずつ置く） */
+    ensureCursorEls() {
+        const grid = document.querySelector('#char-select-screen #icon-grid')
+                  || document.getElementById('icon-grid');
+        if (!grid) return null;
+
+        ['p1', 'p2'].forEach(pid => {
+                if (grid.querySelector(`.nav-cursor.${pid}`)) return;
+                const el = document.createElement('div');
+                el.className = `nav-cursor ${pid}`;
+                el.innerHTML =
+                    `<span class="nav-cursor-tag">${pid === 'p1' ? '1P' : '2P'}</span>`
+                    + '<i class="corner tl"></i><i class="corner tr"></i>'
+                    + '<i class="corner bl"></i><i class="corner br"></i>';
+                grid.appendChild(el);
             });
+        return grid;
+    },
+
+    /** カーソルを今の位置のマスへ移動させる */
+    paintCursors() {
+        const grid = this.ensureCursorEls();
+        if (!grid) return;
+
+        const cells = this.gridCells();
+
+        ['p1', 'p2'].forEach(pid => {
+                const el = grid.querySelector(`.nav-cursor.${pid}`);
+                const cell = cells[this.cursor[pid]];
+                if (!el) return;
+                if (!cell) { el.style.display = 'none'; return; }
+
+                el.style.display = 'block';
+                el.style.left   = cell.offsetLeft + 'px';
+                el.style.top    = cell.offsetTop + 'px';
+                el.style.width  = cell.offsetWidth + 'px';
+                el.style.height = cell.offsetHeight + 'px';
+            });
+
+        // 同じマスにいるときの重なりは、CSS側で1Pを左・2Pを右へずらして避けている
+    },
+
+    /**
+     * カーソルを合わせている力士をカードに表示する。
+     * 誰を選ぼうとしているのか分かるようにするための下見表示なので、
+     * すでに選出を確定しているプレイヤーには行わない。
+     */
+    previewUnderCursor(playerId) {
+        if (game.state.chars[playerId] !== null) return;
+
+        const cell = this.gridCells()[this.cursor[playerId]];
+        if (!this.isSelectable(cell)) return;
+        game.ui.updatePreview(playerId, parseInt(cell.dataset.id));
+    },
+
+    /** 力士選択画面以外ではカーソルを隠す */
+    hideCursors() {
+        document.querySelectorAll('.nav-cursor').forEach(el => { el.style.display = 'none'; });
     },
 
     /** 画面が切り替わった時に選択位置を初期化する */
@@ -168,7 +223,10 @@ const MenuNav = {
             this.cursor.p1 = (first >= 0) ? first : 0;
             this.cursor.p2 = (last >= 0) ? last : 0;
             this.paintCursors();
+            this.previewUnderCursor('p1');
+            this.previewUnderCursor('p2');
         } else {
+            this.hideCursors();
             this.focus = 0;
             this.paintButtons(this.buttonsOf(screen));
         }

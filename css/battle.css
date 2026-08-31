@@ -112,7 +112,9 @@
     bottom: -2px;
     width: 30px;
     height: 120%;
-    background-image: url('/assets/img/nawa.png');
+    /* 先頭の / はサイトのルートを指すため、GitHub Pages のような
+       サブディレクトリ配信や file:// では見つからない。相対パスで指定する。 */
+    background-image: url('../assets/img/nawa.png');
     background-size: 300% 200%;
     background-repeat: no-repeat;
     background-color: transparent;

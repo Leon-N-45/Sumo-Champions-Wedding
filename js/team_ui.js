@@ -93,9 +93,9 @@ class TeamUIManager {
                     icon.style.backgroundColor = '#ffffff';
                 }
                 else if (charData.category === "ドリーム") {
-                    classes.push('cat-dream');
+                    // 結婚式Verでは解禁手段を設けず、常に非表示とする
+                    classes.push('cat-dream', 'secret-hidden');
                     icon.style.backgroundColor = '#ffffff';
-                    if (typeof settings !== 'undefined' && !settings.current.dreamUnlocked) classes.push('secret-hidden');
                 }
                 else if (charData.category === "空きスロット") {
                     classes.push('cat-empty', 'inactive');

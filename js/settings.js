@@ -7,7 +7,6 @@ class SettingsManager {
         this.defaultSettings = {
             volume: { bgm: 100, se: 100, voice: 100 },
             display: { screenSize: 'responsive' },
-            dreamUnlocked: false,
             controls: {
                 p1: { l: 'KeyA', r: 'KeyD', u: 'KeyW', d: 'KeyS' },
                 p2: { l: 'ArrowLeft', r: 'ArrowRight', u: 'ArrowUp', d: 'ArrowDown' }
@@ -28,12 +27,15 @@ class SettingsManager {
                 this.current = { ...this.defaultSettings, ...parsed,
                     volume: { ...this.defaultSettings.volume, ...parsed.volume },
                     display: { ...this.defaultSettings.display, ...parsed.display },
-                    dreamUnlocked: parsed.dreamUnlocked || false,
                     controls: {
                         p1: { ...this.defaultSettings.controls.p1, ...parsed.controls?.p1 },
                         p2: { ...this.defaultSettings.controls.p2, ...parsed.controls?.p2 }
                     }
                 };
+
+                // 旧バージョンで保存された不要なキーを取り除く
+                // （ドリーム力士の解禁フラグは結婚式Verでは廃止済み）
+                delete this.current.dreamUnlocked;
             } catch(e) { console.error(e); }
         }
 

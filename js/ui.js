@@ -26,10 +26,10 @@ class UIManager {
         this.bgmToastTimer = null; // BGMトースト用タイマー
 
         this.initSelectScreen();
-        this.inputSequence = [];
-        this.secretCode = ['KeyH', 'KeyI', 'KeyN', 'KeyO'];
 
-        document.addEventListener('keydown', (e) => this.checkSecretInput(e));
+        // ドリーム力士の隠しコマンド(H,I,N,O)は結婚式Verでは廃止。
+        // ゲストが偶然入力して演出が暴発するのを防ぐため、判定ごと削除している。
+
         document.addEventListener('keydown', (e) => this.highlightKey(e.code, true));
         document.addEventListener('keyup', (e) => this.highlightKey(e.code, false));
         this.resize();
@@ -813,46 +813,6 @@ class UIManager {
         if (type === 'syoubuari') this.els.gyoji.src = 'assets/img/gyouzi_syoubuari.png';
     }
 
-    checkSecretInput(e) {
-        this.inputSequence.push(e.code);
-        if (this.inputSequence.length > this.secretCode.length) {
-            this.inputSequence.shift();
-        }
-        if (this.inputSequence.join(',') === this.secretCode.join(',')) {
-            this.toggleDreamCharacters();
-            this.inputSequence = [];
-        }
-    }
-
-    toggleDreamCharacters() {
-        const isUnlocking = !settings.current.dreamUnlocked;
-        settings.current.dreamUnlocked = isUnlocking;
-        settings.save();
-
-        const dreamIcons = document.querySelectorAll('.cat-dream');
-        if (typeof SoundFX !== 'undefined') {
-            if (!SoundFX.ctx) SoundFX.init();
-        }
-
-        if (isUnlocking) {
-            if (typeof SoundFX !== 'undefined') SoundFX.playTone('reversal');
-            dreamIcons.forEach((icon, index) => {
-                    setTimeout(() => {
-                            icon.classList.remove('secret-hidden');
-                            icon.classList.add('secret-reveal');
-                        }, index * 100);
-                });
-            settings.showToast("隠し力士 解禁！");
-        } else {
-            if (typeof SoundFX !== 'undefined') SoundFX.playTone('miss');
-            dreamIcons.forEach((icon) => {
-                    icon.classList.remove('secret-reveal');
-                    icon.classList.add('secret-hidden');
-                });
-            settings.showToast("隠し力士 封印…");
-        }
-    }
-
     initSelectScreen() {
         if (typeof RIKISHI_DATA === 'undefined' || RIKISHI_DATA.length === 0) {
             setTimeout(() => this.initSelectScreen(), 500);
@@ -892,9 +852,9 @@ class UIManager {
                     icon.style.backgroundColor = '#ffffff';
                 }
                 else if (charData.category === "ドリーム") {
-                    classes.push('cat-dream');
+                    // 結婚式Verでは解禁手段を設けず、常に非表示とする
+                    classes.push('cat-dream', 'secret-hidden');
                     icon.style.backgroundColor = '#ffffff';
-                    if (!settings.current.dreamUnlocked) classes.push('secret-hidden');
                 }
                 else if (charData.category === "空きスロット") {
                     classes.push('cat-empty', 'inactive');

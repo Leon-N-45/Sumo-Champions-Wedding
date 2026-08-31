@@ -2123,7 +2123,10 @@ window.onload = async () => {
         alert("ゲームの初期化に失敗しました: " + e.message);
     }
 
-    // ゲームパッド／アーケードコントローラの読み取りを開始する
+    // コントローラでの画面操作と、パッド入力の読み取りを開始する
+    if (typeof MenuNav !== 'undefined') {
+        MenuNav.start();
+    }
     if (typeof GamepadInput !== 'undefined') {
         GamepadInput.start();
     }

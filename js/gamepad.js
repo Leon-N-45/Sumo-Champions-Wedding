@@ -81,12 +81,20 @@ const GamepadInput = {
         };
     },
 
+    /** 決定として扱うボタン（画面操作時のみ使用） */
+    isConfirm(pad) {
+        return this._btn(pad, 0) || this._btn(pad, 1) || this._btn(pad, 2) || this._btn(pad, 3);
+    },
+
     poll() {
         if (typeof game === 'undefined' || !game) return;
         // キーコンフィグの入力待ち中は、パッドで誤って上書きしない
         if (typeof settings !== 'undefined' && settings.waitingForKey) return;
 
         const pads = this.getPads();
+
+        // 選択画面などを操作中は、取組用のキー入力ではなく画面操作として扱う
+        const onMenu = (typeof MenuNav !== 'undefined') && !!MenuNav.currentScreen();
 
         this.playerOrder.forEach((playerId, i) => {
             const pad = pads[i];
@@ -96,6 +104,15 @@ const GamepadInput = {
             // パッドが繋がっていない場合は、押しっぱなしの状態だけ解除しておく
             const dirs = pad ? this.readDirections(pad) : { l: false, r: false, u: false, d: false };
             const held = this._held[playerId];
+
+            if (onMenu) {
+                // 取組用のキーが押しっぱなしのまま残らないよう、先に解除する
+                ['l', 'r', 'u', 'd'].forEach(dir => {
+                        if (held[dir]) { held[dir] = false; game.setVirtualKey(controls[dir], false); }
+                    });
+                MenuNav.feedFromPad(playerId, dirs, pad ? this.isConfirm(pad) : false);
+                return;
+            }
 
             ['l', 'r', 'u', 'd'].forEach(dir => {
                     const now = dirs[dir];

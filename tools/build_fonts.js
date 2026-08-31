@@ -17,9 +17,11 @@ const ROOT = path.resolve(__dirname, '..');
 const OUT_DIR = path.join(ROOT, 'assets', 'fonts', 'google');
 const OUT_CSS = path.join(ROOT, 'css', 'webfonts.css');
 
+// index.html と manual.html の両方が必要とする字体・太さをまとめて取得する。
+// （Shippori Mincho の 500/900 は manual.html 側で使用）
 const CSS_URL = 'https://fonts.googleapis.com/css2'
     + '?family=M+PLUS+Rounded+1c:wght@400;500;700;800;900'
-    + '&family=Shippori+Mincho:wght@400;800'
+    + '&family=Shippori+Mincho:wght@400;500;800;900'
     + '&family=Yuji+Syuku'
     + '&display=swap';
 

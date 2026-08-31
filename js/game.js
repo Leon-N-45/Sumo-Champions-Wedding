@@ -65,13 +65,7 @@ class GameManager {
                 if (e.code === 'Escape') { this.togglePauseMenu(); }
                 if (['ArrowUp','ArrowDown','ArrowLeft','ArrowRight','Space'].includes(e.code)) e.preventDefault();
                 this.keys.add(e.code);
-                if(this.state.active && !this.state.paused && !e.repeat){
-                    if(this.grapple.active) { this.handleGrappleInput(e.code); }
-                    else {
-                        if(e.code===this.p1.controls.u) this.handleInashi(this.p1, this.p2);
-                        if(e.code===this.p2.controls.u) this.handleInashi(this.p2, this.p1);
-                    }
-                }
+                if (!e.repeat) this.handleActionPress(e.code);
             });
         window.addEventListener('keyup', e=>this.keys.delete(e.code));
         window.addEventListener('blur', () => {
@@ -81,6 +75,35 @@ class GameManager {
                 SoundFX.updateInashi('p1', false); SoundFX.updateInashi('p2', false);
             });
         window.addEventListener('resize', ()=>this.ui.resize());
+    }
+
+    /**
+     * 「押した瞬間」に発生する操作（いなし・組み合い中の入力）を処理する。
+     * キーボードのkeydownと、ゲームパッドのボタンが押された瞬間の
+     * 両方から呼ばれるため、判定をここに集約している。
+     */
+    handleActionPress(code) {
+        if (!this.state.active || this.state.paused) return;
+
+        if (this.grapple.active) {
+            this.handleGrappleInput(code);
+            return;
+        }
+        if (code === this.p1.controls.u) this.handleInashi(this.p1, this.p2);
+        if (code === this.p2.controls.u) this.handleInashi(this.p2, this.p1);
+    }
+
+    /** ゲームパッド側から押しっぱなし状態を反映するための入口 */
+    setVirtualKey(code, pressed) {
+        if (!code) return;
+        if (pressed) {
+            if (!this.keys.has(code)) {
+                this.keys.add(code);
+                this.handleActionPress(code);
+            }
+        } else {
+            this.keys.delete(code);
+        }
     }
 
     togglePauseMenu() {
@@ -2098,6 +2121,11 @@ window.onload = async () => {
     } catch(e) {
         console.error("Game Init Error:", e);
         alert("ゲームの初期化に失敗しました: " + e.message);
+    }
+
+    // ゲームパッド／アーケードコントローラの読み取りを開始する
+    if (typeof GamepadInput !== 'undefined') {
+        GamepadInput.start();
     }
 
     // 音楽の即時再生を削除し、裏読み（プリロード）だけに修正

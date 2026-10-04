@@ -13,7 +13,6 @@ class UIManager {
             ui: document.getElementById('ui-layer'),
             call: document.getElementById('call-display'),
             res: document.getElementById('result-overlay'),
-            grappleInd: document.getElementById('grapple-indicator'),
             dayOverlay: document.getElementById('day-overlay'),
             gyoji: document.getElementById('gyoji-img'),
             p1Name: document.getElementById('p1-name-disp'),
@@ -471,7 +470,6 @@ class UIManager {
         this.els.gyoji.classList.remove('flipped', 'gyoji-confused');
         this.els.gyoji.style.transform = 'scaleX(1)';
         this.els.call.style.display = 'none';
-        this.els.grappleInd.style.display = 'none';
         void this.els.stage.offsetWidth;
         // 即リセットを確定させたのちトランジションを元に戻す（取組中の転倒アニメは通常通り効かせる）
         [p1, p2].forEach(p => {

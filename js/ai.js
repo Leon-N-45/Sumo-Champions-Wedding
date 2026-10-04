@@ -3,7 +3,7 @@
  * AIController（思考×タイプ×レベル＋個体差）
  *
  * 重要な実装方針：このゲームは「溜めキー(d)を離すとチャージが即0に戻る」。
- * そのため、ぶちかまし(charge≥50で前進)や投げ(組み合いでcharge必要)を出すには、
+ * そのため、ぶちかまし(charge≥50で前進)や投げ(いなし時にcharge100)を出すには、
  * 発動するまで d を握り続ける必要がある。AIは「プラン」を保持し、
  * プランが続く間は毎フレーム必要なキーを握り続けてチャージを維持する。
  *
@@ -62,7 +62,7 @@ class AIController {
 
     clampLevel(lv) { return Math.max(1, Math.min(7, lv || 3)); }
 
-    think(me, opp, grapple) {
+    think(me, opp) {
         if (this.inashiCooldown > 0) this.inashiCooldown--;
 
         if (me.stun > 0 || me.isThrown || me.isDefeated || me.miss > 0) {
@@ -75,14 +75,6 @@ class AIController {
         const think = this.determineType(me.baseStats.aiType);
         const ptype = me.baseStats.playType || 'バランス';
         const level = this.clampLevel(me.cpuLevel);
-
-        // 組み合い中は専用処理（d を握り続けてチャージを溜め、閾値で投げ/押し）
-        if (grapple.active) {
-            this.plan = null;
-            this.tacticState = null;
-            this.thinkGrapple(me, opp, grapple, level, think, ptype);
-            return this.aiKeys;
-        }
 
         // 反応いなし（相手の「溜めた突進」に対してのみ）。単独 u・クールダウン付き。
         if (this.tryInashi(me, opp, level, think, ptype)) return this.aiKeys;
@@ -274,39 +266,5 @@ class AIController {
             return;
         }
         this.startPlan('hold', 10 + Math.floor(Math.random() * 10));
-    }
-
-    // 組み合い（寄り）中：投げ(掴み投げ)は charge=100 必須。投げ狙いは前進せず溜め切ってu。
-    thinkGrapple(me, opp, grapple, level, think, ptype) {
-        const k = me.controls;
-        const facingRight = me.x < opp.x;
-        const keyFwd = facingRight ? k.r : k.l;
-
-        this.aiKeys.clear();
-
-        // 決着間際は押し切る
-        if (me.stamina <= 1.1 || opp.stamina <= 1.1) { this.aiKeys.add(keyFwd); return; }
-
-        // 常にチャージを握る（投げ・ぶちかましの威力源。離すと0に戻るため握り続ける）
-        this.aiKeys.add(k.d);
-        if (me.stamina < 6) return; // 力尽き気味は溜めて耐える
-
-        const likesThrow = (think === '技狙い' || ptype === 'テクニック');
-        const likesBuchi = (think === '力押し' || ptype === 'パワー');
-
-        // 投げ（掴み投げ）は charge=100 必須。100到達なら必ず投げる。
-        if (me.charge >= 100) { this.aiKeys.add(k.u); return; }
-
-        if (likesBuchi) {
-            // 力押し/パワー：前進してぶちかまし(50%)で押し込む（投げは狙わない）
-            if (me.charge >= 50) this.aiKeys.add(keyFwd);
-            return;
-        }
-        if (likesThrow) {
-            // 技狙い/テク：前進しない（前進=50%で押しが出て100に届かなくなる）。dのみで100まで溜めて投げる。
-            return;
-        }
-        // 素直/バランス：基本は溜め切って投げを狙う。たまに押して揺さぶる程度。
-        if (Math.random() < 0.18) this.aiKeys.add(keyFwd);
     }
 }

@@ -119,6 +119,7 @@ const CONFIG = {
 
         // 硬直時間を短くして、サクサク動けるようにする
         COOLDOWN_TIME: 40,      // 元 60
+        PUSH_COOLDOWN: 12,      // 押し出し1回ごとの間（寄り廃止に伴い追加）
         INASHI_DURATION_BASE: 20, // 元 30
         INASHI_TECH_MOD: 2,
         STUMBLE_DURATION: 30,   // 元 45

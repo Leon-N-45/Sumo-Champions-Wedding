@@ -19,7 +19,6 @@ class GameManager {
             isTransitioning: false
         };
         this.transitionTimer = 0;
-        this.grapple = { active: false, master: null, slave: null };
         this.lastHit = null;
         this.deciderVoicePlayed = false;
 
@@ -85,10 +84,6 @@ class GameManager {
     handleActionPress(code) {
         if (!this.state.active || this.state.paused) return;
 
-        if (this.grapple.active) {
-            this.handleGrappleInput(code);
-            return;
-        }
         if (code === this.p1.controls.u) this.handleInashi(this.p1, this.p2);
         if (code === this.p2.controls.u) this.handleInashi(this.p2, this.p1);
     }
@@ -476,15 +471,12 @@ class GameManager {
         this.p1.inashiTimer = 0; this.p2.inashiTimer = 0;
         SoundFX.updateInashi('p1', false); SoundFX.updateInashi('p2', false);
 
-        this.grapple = { active: false, master: null, slave: null };
         this.state.processingEnd = false;
         this.lastHit = null;
         this.keys.clear();
 
         this.aiP1.reset(); this.aiP2.reset();
         this.aiP1.aiKeys.clear(); this.aiP2.aiKeys.clear();
-
-        this.ui.els.grappleInd.style.display = 'none';
 
         // 勝星表示（団体戦はチームの勝星、個人戦は個人の勝星）
         if (this.state.isTeamMode && typeof window.teamGame !== 'undefined') {
@@ -730,12 +722,10 @@ class GameManager {
 
         let p1AIKeys = null;
         let p2AIKeys = null;
-        if(this.p1.isCPU) p1AIKeys = this.aiP1.think(this.p1, this.p2, this.grapple);
-        if(this.p2.isCPU) p2AIKeys = this.aiP2.think(this.p2, this.p1, this.grapple);
+        if(this.p1.isCPU) p1AIKeys = this.aiP1.think(this.p1, this.p2);
+        if(this.p2.isCPU) p2AIKeys = this.aiP2.think(this.p2, this.p1);
 
-        if (this.grapple.active) {
-            this.updateGrappleState(p1AIKeys, p2AIKeys);
-        } else {
+        {
             this.updatePlayer(this.p1, this.p2, this.p1.controls, p1AIKeys);
             this.updatePlayer(this.p2, this.p1, this.p2.controls, p2AIKeys);
             this.physics();
@@ -954,7 +944,7 @@ class GameManager {
     }
 
     physics() {
-        if (this.grapple.active || this.state.processingEnd) return;
+        if (this.state.processingEnd) return;
 
         const d = Math.abs(this.p1.x - this.p2.x);
         const hitDist = cfg('GAME_RULES.HIT_DIST', 100);
@@ -1029,14 +1019,14 @@ class GameManager {
                 return;
             }
 
-            // 【最優先】相手がスタン中なら、接触した瞬間に「寄り（Grapple）」に移行する
-            // ※自分のクールタイムだけチェックし、相手のクールタイム(被弾硬直など)は無視して掴む
+            // 相手がふらついている間に当たれば、そのまま押し込める
+            // ※自分のクールタイムだけ見る（相手の被弾硬直は無視して押す）
             if (this.p2.stun > 0 && this.p1.isPushing && this.p1.cooldown <= 0) {
-                this.startGrapple(this.p1, this.p2);
+                this.pushOpponent(this.p1, this.p2);
                 return;
             }
             if (this.p1.stun > 0 && this.p2.isPushing && this.p2.cooldown <= 0) {
-                this.startGrapple(this.p2, this.p1);
+                this.pushOpponent(this.p2, this.p1);
                 return;
             }
 
@@ -1085,11 +1075,12 @@ class GameManager {
                 this.checkWin(); return;
             }
 
+            // 片方だけが前に出ていれば、押している側が相手を押し込む
             if (this.p1.isPushing && !this.p2.isPushing && this.p1.cooldown <= 0 && this.p2.cooldown <= 0) {
-                this.startGrapple(this.p1, this.p2);
+                this.pushOpponent(this.p1, this.p2);
                 return;
             } else if (this.p2.isPushing && !this.p1.isPushing && this.p1.cooldown <= 0 && this.p2.cooldown <= 0) {
-                this.startGrapple(this.p2, this.p1);
+                this.pushOpponent(this.p2, this.p1);
                 return;
             }
 
@@ -1188,140 +1179,6 @@ class GameManager {
         }
     }
 
-    updateGrappleState(p1AIKeys, p2AIKeys) {
-        const m = this.grapple.master; const s = this.grapple.slave;
-        const mStats = m.getStats(s); const sStats = s.getStats(m);
-
-        const moveCost = cfg('STAMINA.MOVE_COST', 0.15);
-        const grappleCostRate = cfg('STATUS.GRAPPLE_COST_RATE', 0.2);
-
-        m.stamina = Math.max(1, m.stamina - moveCost * grappleCostRate);
-        s.stamina = Math.max(1, s.stamina - moveCost * grappleCostRate);
-
-        const mFacing = (m.x < s.x) ? 1 : -1;
-        const getInput = (p, keys, isAI, aiKeys) => {
-            const source = isAI ? aiKeys : this.keys;
-            const facing = (p.x < (p===m?s.x:m.x)) ? 1 : -1;
-            return {
-                wantsFwd: facing===1 ? source.has(keys.r) : source.has(keys.l),
-                wantsCharge: source.has(keys.d),
-                wantsTech: source.has(keys.u)
-            };
-        };
-
-        const mInput = getInput(m, m.controls, m.isCPU, m === this.p1 ? p1AIKeys : p2AIKeys);
-        const sInput = getInput(s, s.controls, s.isCPU, s === this.p1 ? p1AIKeys : p2AIKeys);
-
-        // master/slave 共通のチャージ処理（挙動は従来と完全に同一）
-        const applyGrappleCharge = (p, pStats, input) => {
-            const thresh = p.isCharging ? 0.0 : 3.0;
-            if (input.wantsCharge && p.stamina > thresh && p.chargeLock === 0) {
-                const baseGain = cfg('CHARGE.BASE_GAIN', 0.3);
-                const techRate = cfg('STATUS.TECH_CHARGE_RATE', 0.25);
-                const gain = baseGain * (1 + (pStats.tech - 5) * techRate);
-                p.charge = Math.min(100, p.charge + gain);
-                const chgCost = cfg('STAMINA.CHARGE_COST', 0.1);
-
-                p.stamina = Math.max(0, p.stamina - chgCost);
-                p.isCharging = true;
-
-                if (p.stamina <= 0.0) {
-                    p.charge = 0; p.chargeLock = 40; p.isCharging = false;
-                }
-            } else {
-                p.charge = 0; p.isCharging = false;
-            }
-        };
-        applyGrappleCharge(m, mStats, mInput);
-        applyGrappleCharge(s, sStats, sInput);
-
-        SoundFX.updateCharge(m.id, m.isCharging, m.charge);
-        SoundFX.updateCharge(s.id, s.isCharging, s.charge);
-
-        // 修正: HP1ならダメージ非表示、スタン予約のみ発動
-        [m, s].forEach(p => {
-                if (p.inashiTimer > 0) {
-                    // タイマー切れ（失敗）の瞬間にペナルティ
-                    if (p.inashiTimer === 1) {
-                        const missPenalty = cfg('STAMINA.MISS_PENALTY', 20);
-
-                        // HPが残っている時だけ減算＆表示
-                        if (p.stamina > 1) {
-                            p.stamina = Math.max(1, p.stamina - missPenalty);
-                            this.ui.showDamage(p, missPenalty);
-                        }
-
-                        const recoveryWait = cfg('STAMINA.RECOVERY_DELAY', 200);
-                        p.recoveryDelay = recoveryWait;
-
-                        // 予約されていたスタンを発動（メッセージなし）
-                        if (p.pendingStun > 0) {
-                            p.stun = p.pendingStun;
-                            p.pendingStun = 0;
-                        }
-                    }
-                    p.inashiTimer--;
-                    SoundFX.updateInashi(p.id, true);
-                }
-                else { SoundFX.updateInashi(p.id, false); }
-            });
-
-        if (m.isCPU && mInput.wantsTech) {
-            if (m.charge >= 100) { this.handleGrappleCounter(m, s, 'throw'); return; }
-        }
-
-        if (mInput.wantsFwd) {
-            const spdBase = cfg('ACTION.SPEED_BASE', 2.8);
-            const grpSpdRate = cfg('STATUS.GRAPPLE_SPD_RATE', 0.5);
-            const baseSpeed = m.isCharging ? spdBase * 0.3 : spdBase * grpSpdRate;
-
-            let pushSpeed = baseSpeed * Math.max(0.2, (1 + (mStats.power - 5) * 0.6));
-
-            if (s.isCharging) { pushSpeed *= 0.5; }
-
-            if (m.maxStamina <= 20 && !m.isCharging && s.maxStamina <= 20 && !s.isCharging) {
-                pushSpeed *= 3.0;
-                pushSpeed = Math.max(pushSpeed, 2.5);
-            }
-
-            const hitDist = cfg('GAME_RULES.HIT_DIST', 100);
-            m.x += pushSpeed * mFacing; s.x = m.x + (hitDist * mFacing);
-        }
-
-        if (s.isCPU) {
-            const k = s === this.p1 ? p1AIKeys : p2AIKeys;
-
-            // ■ 上キー (Tech) は「投げ (100%)」専用
-            if (k.has(s.controls.u)) {
-                if(s.charge >= 100) {
-                    this.handleGrappleCounter(s, m, 'throw');
-                }
-                // チャージ50%のぶちかまし判定はここじゃないので削除！
-                // いなし(else)も削除済みなので、100%未満で上キーを押しても何も起きない（正解）
-            }
-            // ■ 前キー (Forward) で「ぶちかまし (50%)」または「押し返し」
-            else if (s.x < m.x ? k.has(s.controls.r) : k.has(s.controls.l)) {
-                // ここで handleGrappleCounter が呼ばれ、チャージが50%あれば
-                // 内部で自動的に superPush (ぶちかまし) になるはずです
-                this.handleGrappleCounter(s, m, 'push');
-            }
-        }
-    }
-    handleGrappleInput(code) {
-        const s = this.grapple.slave; const m = this.grapple.master;
-        if(!m.isCPU) {
-            if (this.isPlayerControl(m, code, 'u')) { if (m.charge >= 100) this.handleGrappleCounter(m, s, 'throw'); }
-            if (this.isPlayerControl(m, code, 'fwd')) { if (m.charge >= 50) this.handleGrappleCounter(m, s, 'push'); }
-        }
-        if (s && !s.isCPU) {
-            if (this.isPlayerControl(s, code, 'u')) {
-                if (s.charge >= 100) this.handleGrappleCounter(s, m, 'throw');
-                else this.handleInashi(s, m);
-            }
-            if (this.isPlayerControl(s, code, 'fwd')) { if (s.charge >= 50) this.handleGrappleCounter(s, m, 'push'); }
-        }
-    }
-
     handleInashi(p, opp) {
         if(p.isDefeated || p.cooldown>0 || p.stun > 0 || p.inashiTimer > 0) return;
 
@@ -1387,6 +1244,26 @@ class GameManager {
 
         p.actionType = 'inashi';
         setTimeout(() => p.actionType = null, p.inashiTimer * 16);
+    }
+
+    /**
+     * 接触して押し込む。寄り（組み合い）を廃止したため、
+     * 片方だけが前に出ている接触はすべてこの押し出しで処理する。
+     * 相手がいなしを構えていれば、押した側が返される。
+     */
+    pushOpponent(atk, def){
+        if (def.inashiTimer > 0) {
+            this.triggerInashiSuccess(def, atk);
+            return;
+        }
+
+        const dir = (atk.x < def.x) ? 1 : -1;
+        this.normalPush(atk, def, dir);
+
+        // 連続で押し続けて一方的にならないよう、押すたびに短い間を置く
+        atk.cooldown = cfg('ACTION.PUSH_COOLDOWN', 12);
+        SoundFX.playHit(false);
+        this.ui.fx(atk, def, 'col');
     }
 
     normalPush(atk, def, dir){
@@ -1523,74 +1400,6 @@ class GameManager {
         return false;
     }
 
-    handleGrappleCounter(atk, def, type) {
-        if (type === 'push' && def.inashiTimer > 0) {
-            this.endGrapple();
-            this.triggerInashiSuccess(def, atk);
-            return;
-        }
-
-        if (type === 'throw') {
-            this.endGrapple();
-            this.superSwap(atk, def);
-
-            SoundFX.playVoice('dosukoi');
-            SoundFX.playHit(true);
-
-            atk.animClass = (atk.x < def.x) ? 'throw-posture-right' : 'throw-posture-left';
-
-            atk.cooldown = 20;
-            def.cooldown = 20;
-            atk.chargeLock = 60;
-
-            setTimeout(() => {
-                    atk.animClass = null;
-                    atk.el.classList.remove('throw-posture-left', 'throw-posture-right');
-                    atk.el.classList.add('throw-finish-motion');
-                    setTimeout(() => atk.el.classList.remove('throw-finish-motion'), 300);
-                }, 400);
-
-            return;
-        }
-
-        this.endGrapple();
-        const dir = (atk.x < def.x) ? 1 : -1;
-        this.superPush(atk, def, dir);
-
-        atk.x -= 20 * dir;
-
-        atk.animClass = (dir === 1) ? 'thrust-attack-right' : 'thrust-attack-left';
-
-        // atk.cooldown は superPush 内でハヤサに応じて設定済み（ここでは上書きしない）
-        def.cooldown = 20;
-        atk.chargeLock = 40;
-
-        setTimeout(() => {
-                atk.animClass = null;
-                atk.el.classList.remove('thrust-attack-right', 'thrust-attack-left');
-                atk.el.classList.add('thrust-finish-motion');
-                setTimeout(() => {
-                        atk.el.classList.remove('thrust-finish-motion');
-                    }, 200);
-            }, 150);
-    }
-    startGrapple(master, slave) {
-        this.grapple.active = true; this.grapple.master = master; this.grapple.slave = slave;
-        this.ui.els.grappleInd.style.display = 'block'; SoundFX.playHit(false);
-
-        // 追加: 組み止められた側はチャージリセット
-        slave.charge = 0;
-        slave.isCharging = false;
-        SoundFX.updateCharge(slave.id, false, 0);
-
-        const dir = (master.x < slave.x) ? 1 : -1; const mid = (master.x + slave.x) / 2;
-        const hitDist = cfg('GAME_RULES.HIT_DIST', 100);
-        master.x = mid - (hitDist/2 * dir); slave.x = mid + (hitDist/2 * dir);
-    }
-    endGrapple() {
-        this.grapple.active = false; this.grapple.master = null; this.grapple.slave = null;
-        this.ui.els.grappleInd.style.display = 'none';
-    }
 
     checkWin(){
         if(this.state.processingEnd) return;
@@ -1670,8 +1479,6 @@ class GameManager {
 
         this.stopInashiSound();
         this.state.active = false;
-
-        this.endGrapple();
 
         this.ui.triggerDoubleSlowMotion(this.p1, this.p2);
 
@@ -1869,7 +1676,6 @@ class GameManager {
     startSlowMotion(wName, loser, kimarite) {
         this.state.active = false;
         this.ui.stopGyojiCalls();
-        this.endGrapple();
         loser.isDefeated = true;
         if(kimarite.includes('投げ')) loser.isThrown = true;
         const winner = (loser === this.p1) ? this.p2 : this.p1;

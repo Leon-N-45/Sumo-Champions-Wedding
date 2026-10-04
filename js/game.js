@@ -1260,8 +1260,18 @@ class GameManager {
         const dir = (atk.x < def.x) ? 1 : -1;
         this.normalPush(atk, def, dir);
 
-        // 連続で押し続けて一方的にならないよう、押すたびに短い間を置く
-        atk.cooldown = cfg('ACTION.PUSH_COOLDOWN', 12);
+        // 一発ごとにはっきり弾き飛ばす。
+        // ※ rebound は cooldown 中しか働かないため、受け側にも必ず cooldown を入れる。
+        //   これが無いと、接触したまま高速で押し続ける挙動になる。
+        const aStats = atk.getStats(def);
+        const rbVel = cfg('ACTION.PUSH_REBOUND_VELOCITY', 11);
+        const pwrRate = cfg('ACTION.PUSH_REBOUND_PWR_RATE', 0.06);
+        def.rebound = dir * rbVel * (1 + (aStats.power - 5) * pwrRate);
+        def.cooldown = cfg('ACTION.PUSH_DEF_COOLDOWN', 18);
+
+        // 押した側も間を置く（連打で一方的にならないように）
+        atk.cooldown = cfg('ACTION.PUSH_COOLDOWN', 26);
+
         SoundFX.playHit(false);
         this.ui.fx(atk, def, 'col');
     }

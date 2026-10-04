@@ -858,8 +858,11 @@ class UIManager {
         }
         const sel = document.getElementById('match-count-select');
         if (sel) {
+            // 取組数を固定している場合は、その値を初期選択にして表示を合わせる
+            const fixed = (typeof FIXED_MATCH_COUNT === 'number' && FIXED_MATCH_COUNT > 0)
+                ? FIXED_MATCH_COUNT : 2;
             sel.innerHTML = '';
-            for (let i = 1; i <= 15; i++) { const o = document.createElement('option'); o.text = i; if (i === 2) o.selected = true; sel.add(o); }
+            for (let i = 1; i <= 15; i++) { const o = document.createElement('option'); o.text = i; if (i === fixed) o.selected = true; sel.add(o); }
         }
 
         const iconGrid = document.querySelector('#char-select-screen #icon-grid') || document.getElementById('icon-grid');

@@ -365,6 +365,13 @@ class GameManager {
         this.ui.updateControlsDisplay();
         this.state.matches = parseInt(document.getElementById('match-count-select').value);
         this.state.deuce = document.getElementById('deuce-check').checked;
+
+        // 結婚式Verは1番勝負に固定（画面の選択より優先する）
+        if (typeof FIXED_MATCH_COUNT === 'number' && FIXED_MATCH_COUNT > 0) {
+            this.state.matches = FIXED_MATCH_COUNT;
+            if (FIXED_MATCH_COUNT === 1) this.state.deuce = false;
+        }
+
         if (this.state.isTeamMode) {
             this.state.matches = 1; // 団体戦は1取組ずつ進行する
             this.state.deuce = false;

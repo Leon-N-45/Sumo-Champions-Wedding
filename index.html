@@ -29,7 +29,7 @@
                 <button class="back-to-top-btn" onclick="location.reload()">戻る</button>
 
                 <div id="sumo-format-container">
-                    <button class="back-to-top-btn format-btn" onclick="game.ui.openBgmModal()">選曲</button>
+                    <button class="back-to-top-btn format-btn" onclick="game.ui.openBgmModal()" disabled title="取組中の曲は固定です">選曲</button>
                     <button class="back-to-top-btn format-btn" onclick="document.getElementById('team-format-popover').classList.toggle('active')">相撲形式</button>
                    <div id="team-format-popover" class="format-popover" style="position: absolute; top: 50px; right: 0; background: #fff; border: 3px solid #000; border-radius: 8px; padding: 20px;  z-index: 400; display: none; flex-direction: column; gap: 15px; width: 320px;">
                         <div class="popover-close-btn" onclick="document.getElementById('team-format-popover').classList.remove('active')" style="cursor:pointer; text-align:right; font-weight:bold;">✕</div>
@@ -291,7 +291,7 @@
             </div>
             
             <div id="sumo-format-container">
-                <button class="back-to-top-btn format-btn" onclick="game.ui.openBgmModal()">選曲</button>
+                <button class="back-to-top-btn format-btn" onclick="game.ui.openBgmModal()" disabled title="取組中の曲は固定です">選曲</button>
                 <button class="back-to-top-btn format-btn" onclick="document.getElementById('format-popover').classList.toggle('active')">相撲形式</button>
 
                 <div id="format-popover">

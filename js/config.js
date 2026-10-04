@@ -41,6 +41,13 @@ const DATA_URLS = {
 };
 
 // ============================================================
+// ■ 取組中のBGM
+// ------------------------------------------------------------
+// 結婚式Verでは1曲に固定する。空文字にすると従来通り選曲できる。
+// ============================================================
+const FIXED_BATTLE_BGM = 'bgm11.mp3';
+
+// ============================================================
 // ■ オフラインモード
 // ------------------------------------------------------------
 // true  … 通信を一切せず js/data_local.js のデータだけで動く【本番はこちら】
@@ -300,32 +307,34 @@ function charTypeAssets(charData) {
     return { bg: '', typeImg: 'TypeBalance.png' };
 }
 
-// 力士アイコンを20マスのグリッドへ配置する共通ロジック（slot 指定→残りを空きマスへ補填）
+// 力士アイコンを20マスのグリッドへ配置する共通ロジック。
+// 並び順は Characters シートの ID で決まる（ID 0 が左上、以降が右へ）。
+// 空き番号をつくれば、その位置をマスごと空けられる。
 function buildCharGridSlots() {
     const gridSlots = new Array(20).fill(null);
     const unplaced = [];
-    const conflicts = [];   // Slotが重複していて指定位置に置けなかった力士
-    const noSlot = [];      // Slotが未設定の力士
+    const conflicts = [];   // IDが重複していて指定位置に置けなかった力士
+    const noId = [];        // IDが未設定、または範囲外の力士
 
     RIKISHI_DATA.forEach(d => {
-            const valid = Number.isFinite(d.slot) && d.slot >= 0 && d.slot < 20;
-            if (valid && gridSlots[d.slot] === null) {
-                gridSlots[d.slot] = d;
+            const valid = Number.isFinite(d.id) && d.id >= 0 && d.id < 20;
+            if (valid && gridSlots[d.id] === null) {
+                gridSlots[d.id] = d;
                 return;
             }
-            if (valid) conflicts.push(`${d.name}(Slot${d.slot}は${gridSlots[d.slot].name}が使用中)`);
-            else noSlot.push(d.name);
+            if (valid) conflicts.push(`${d.name}(ID${d.id}は${gridSlots[d.id].name}が使用中)`);
+            else noId.push(d.name);
             unplaced.push(d);
         });
 
     // 指定通りに置けなかった力士は空きマスへ順に流し込まれる。
     // 静かに位置がずれると気づきにくいため、原因をコンソールへ出す。
-    if (conflicts.length || noSlot.length) {
+    if (conflicts.length || noId.length) {
         console.warn(
-            'スプレッドシートのSlot指定に問題があります。空いているマスへ自動配置しました。\n'
+            'スプレッドシートのID指定に問題があります。空いているマスへ自動配置しました。\n'
             + (conflicts.length ? `  重複: ${conflicts.join(' / ')}\n` : '')
-            + (noSlot.length ? `  未設定: ${noSlot.join(' / ')}\n` : '')
-            + '  Charactersシートの Slot 列（0〜19で重複なし）を見直してください。'
+            + (noId.length ? `  未設定または範囲外: ${noId.join(' / ')}\n` : '')
+            + '  Charactersシートの ID 列（0〜19で重複なし）を見直してください。'
         );
     }
 

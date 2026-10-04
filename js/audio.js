@@ -62,8 +62,12 @@ const SoundFX = {
 
         let targetFile = 'random';
 
+        // 結婚式Verは取組中のBGMを1曲に固定している（選曲より優先）
+        if (typeof FIXED_BATTLE_BGM !== 'undefined' && FIXED_BATTLE_BGM) {
+            targetFile = FIXED_BATTLE_BGM;
+        }
         // 優先順位1: セーブデータ (settings)
-        if (typeof settings !== 'undefined' && settings.current && settings.current.bgmFile) {
+        else if (typeof settings !== 'undefined' && settings.current && settings.current.bgmFile) {
             targetFile = settings.current.bgmFile;
         }
         // 優先順位2: 一時的な選択 (selectedBgmFile)

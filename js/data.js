@@ -167,9 +167,10 @@ async function loadExternalData() {
                         };
                     }).filter(d => d !== null);
 
-                // Slot未設定(NaN)は末尾へ。0は有効な値なので || で弾かないこと
-                const slotOf = (d) => Number.isFinite(d.slot) ? d.slot : 999;
-                RIKISHI_DATA.sort((a, b) => slotOf(a) - slotOf(b));
+                // 並び順はIDで決まる。未設定(NaN)は末尾へ。
+                // 0は有効な値なので || で弾かないこと
+                const orderOf = (d) => Number.isFinite(d.id) ? d.id : 999;
+                RIKISHI_DATA.sort((a, b) => orderOf(a) - orderOf(b));
                 console.log("キャラクターデータを読み込みました:", RIKISHI_DATA.length + "件");
 
                 if (outOfRange.length) {

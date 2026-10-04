@@ -1036,7 +1036,10 @@ class GameManager {
 
             const recoveryWait = cfg('STAMINA.RECOVERY_DELAY', 200);
 
-            if (this.p1.isPushing && this.p2.isPushing && this.p1.cooldown <= 0) {
+            // かち合いは両者が動ける時だけ成立させる。
+            // 片方の硬直を見ていないと、弾かれて硬直中の相手にも
+            // かち合いダメージが入り、両者が同時に被弾したように見えてしまう。
+            if (this.p1.isPushing && this.p2.isPushing && this.p1.cooldown <= 0 && this.p2.cooldown <= 0) {
                 const rbVel = cfg('ACTION.REBOUND_VELOCITY', 8);
                 const dir = (this.p1.x < this.p2.x) ? 1 : -1;
 
@@ -1084,62 +1087,12 @@ class GameManager {
                 return;
             }
 
+            // どちらの押しも成立しない接触（硬直中など）は、重なりを解くだけにする。
+            // ここで毎フレームの押し合いダメージを与えると、押し出しとは別系統の
+            // 小ダメージが二重に発生してしまうため、ダメージ処理は置かない。
             const overlap = (hitDist - d) / 2;
             if (this.p1.x < this.p2.x) { this.p1.x -= overlap; this.p2.x += overlap; }
             else { this.p1.x += overlap; this.p2.x -= overlap; }
-
-            const ST = CONFIG.STATUS || {};
-            const pushBase = ST.PUSH_BASE_RATE || 0.1;
-            const distConv = ST.PUSH_DIST_CONVERT || 1.0;
-
-            let moveForce = (s1.power - s2.power) * pushBase * distConv;
-            if (moveForce > 0 && this.p2.isCharging) moveForce /= (ST.PUSH_VS_CHARGE || 1.5);
-            else if (moveForce < 0 && this.p1.isCharging) moveForce /= (ST.PUSH_VS_CHARGE || 1.5);
-
-            this.p1.x += moveForce;
-            this.p2.x += moveForce;
-
-            const moveCost = cfg('STAMINA.MOVE_COST', 0.15);
-            const pwrDmgRate = ST.PWR_DMG_RATE || 0.1;
-
-            if (moveForce > 0) {
-                // P1が押している（P2にダメージ）
-                const pwrBonus = Math.max(0, (s1.power - 5) * pwrDmgRate);
-                let finalDmg = moveCost + pwrBonus;
-
-                // 修正: 相手がスタン中は、接触ダメージを 0 にする
-                // これでマシンガンダメージが止まります。
-                // (ダメージは入りませんが、相手は抵抗できないので一方的に土俵外へ運べます)
-                if (this.p2.stun > 0) {
-                    finalDmg = 0;
-                }
-
-                if (finalDmg > 0) {
-                    this.p2.stamina -= finalDmg;
-                    this.p2.recoveryDelay = recoveryWait;
-                    // ダメージがある時だけ表示
-                    if(Math.random() < 0.1 || finalDmg > 1.0) this.ui.showDamage(this.p2, finalDmg);
-                }
-
-                this.checkWin();
-            } else if (moveForce < 0) {
-                // P2が押している（P1にダメージ）
-                const pwrBonus = Math.max(0, (s2.power - 5) * pwrDmgRate);
-                let finalDmg = moveCost + pwrBonus;
-
-                // 修正: こちらも同様にスタン中はダメージ 0
-                if (this.p1.stun > 0) {
-                    finalDmg = 0;
-                }
-
-                if (finalDmg > 0) {
-                    this.p1.stamina -= finalDmg;
-                    this.p1.recoveryDelay = recoveryWait;
-                    if(Math.random() < 0.1 || finalDmg > 1.0) this.ui.showDamage(this.p1, finalDmg);
-                }
-
-                this.checkWin();
-            }
         }
     }
 

@@ -45,8 +45,11 @@ const MenuNav = {
         if (this.isActive('settings-modal')) return 'modal';
         if (document.getElementById('char-detail-overlay')) return 'modal';
 
+        // 力士選択へ戻っても結果画面のボタンは要素として残るため、
+        // style だけでなく実際に画面に出ているかで判定する。
+        // （offsetParent は非表示の親の中にあると null になる）
         const finalBtns = document.getElementById('final-btn-container');
-        if (finalBtns && finalBtns.style.display === 'flex') return 'result';
+        if (finalBtns && finalBtns.style.display === 'flex' && finalBtns.offsetParent !== null) return 'result';
 
         if (this.isActive('char-select-screen')) return 'charSelect';
         if (this.isActive('team-select-screen')) return 'teamSelect';
@@ -344,6 +347,18 @@ const MenuNav = {
                               .filter(i => i >= 0).pop();
             this.cursor.p1 = (first >= 0) ? first : 0;
             this.cursor.p2 = (last >= 0) ? last : 0;
+
+            // 取組後に戻ってきた場合は、すでに選ばれている力士へカーソルを合わせる
+            if (screen === 'charSelect') {
+                ['p1', 'p2'].forEach(pid => {
+                        const charId = game.state.chars[pid];
+                        if (charId === null || charId === undefined) return;
+                        const idx = cells.findIndex(
+                            c => c.hasAttribute('data-id') && parseInt(c.dataset.id) === charId);
+                        if (idx >= 0) this.cursor[pid] = idx;
+                    });
+            }
+
             this.paintCursors();
             this.previewUnderCursor('p1');
             this.previewUnderCursor('p2');

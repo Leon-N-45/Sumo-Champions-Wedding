@@ -314,6 +314,13 @@ class UIManager {
             this.game.state.wins = { p1: 0, p2: 0 };
             this.game.state.current = 1;
         }
+
+        // 取組後に戻ってきた場合、直前に使っていた力士を選んだ状態で見せる。
+        // そのまま決定すれば同じ顔ぶれで続けられ、変えたい人だけ選び直せばよい。
+        ['p1', 'p2'].forEach(pid => {
+                const charId = this.game.state.chars[pid];
+                if (charId !== null && charId !== undefined) this.game.selectChar(pid, charId);
+            });
         this.els.res.classList.remove('visible');
         this.els.wrapper.style.display = 'none';
         this.els.start.classList.remove('active');

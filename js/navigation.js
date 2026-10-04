@@ -14,16 +14,15 @@
  * こうすることで、当日の機材がどちらであっても同じように動く。
  */
 const MenuNav = {
-    // 決定ボタンに使うキー（設定画面のキーコンフィグとは別枠）
+    // 決定・取消に使うキー（設定画面のキーコンフィグとは別枠）。
+    // P1は移動キー(WASD)の近くに、P2はEnter/Backspaceに合わせている。
     confirmKeys: {
-        p1: ['Space'],
+        p1: ['KeyE'],
         p2: ['Enter', 'NumpadEnter']
     },
-
-    // 取消（選出のやり直し）に使うキー
     cancelKeys: {
-        p1: ['KeyQ'],
-        p2: ['Backspace', 'ShiftRight']
+        p1: ['KeyR'],
+        p2: ['Backspace']
     },
 
     // 力士選択グリッドの構成（CSSの grid-template-columns と揃えること）
@@ -151,8 +150,15 @@ const MenuNav = {
         return true;
     },
 
+    /** キーやコントローラで画面を操作するプレイヤーがいるか */
+    anyCursorPlayer() {
+        return ['p1', 'p2'].some(p => settings.usesCursor(p));
+    },
+
     paintButtons(btns) {
-        btns.forEach((b, i) => b.classList.toggle('nav-focus', i === this.focus));
+        // 両者ともマウスで操作する場合、選択中を示す枠は不要
+        const show = this.anyCursorPlayer();
+        btns.forEach((b, i) => b.classList.toggle('nav-focus', show && i === this.focus));
     },
 
     // --- 力士選択画面 ---
@@ -245,10 +251,15 @@ const MenuNav = {
         return grid;
     },
 
-    /** 設定変更時など、カーソルの表示状態を今の操作方法に合わせ直す */
+    /** 設定変更時など、カーソルや枠の表示を今の操作方法に合わせ直す */
     refreshCursors() {
-        if (this.isGridScreen(this.currentScreen())) this.paintCursors();
-        else this.hideCursors();
+        const screen = this.currentScreen();
+        if (this.isGridScreen(screen)) {
+            this.paintCursors();
+        } else {
+            this.hideCursors();
+            if (screen) this.paintButtons(this.buttonsOf(screen));
+        }
     },
 
     /** カーソルを今の位置のマスへ移動させる */
@@ -258,12 +269,17 @@ const MenuNav = {
 
         const cells = this.gridCells();
 
+        // カーソルが乗っているマスは、マウスのホバーと同じように拡大させる
+        cells.forEach(c => c.classList.remove('nav-hover'));
+
         ['p1', 'p2'].forEach(pid => {
                 const el = grid.querySelector(`.nav-cursor.${pid}`);
                 const cell = cells[this.cursor[pid]];
                 if (!el) return;
                 // マウスで選ぶ設定のプレイヤーには枠を出さない
                 if (!cell || !settings.usesCursor(pid)) { el.style.display = 'none'; return; }
+
+                cell.classList.add('nav-hover');
 
                 el.style.display = 'block';
                 el.style.left   = cell.offsetLeft + 'px';
@@ -314,6 +330,9 @@ const MenuNav = {
     /** 力士選択画面以外ではカーソルを隠す */
     hideCursors() {
         document.querySelectorAll('.nav-cursor').forEach(el => { el.style.display = 'none'; });
+        // カーソルによる拡大が残らないように消す
+        document.querySelectorAll('.char-select-icon.nav-hover')
+            .forEach(c => c.classList.remove('nav-hover'));
     },
 
     /** 画面が切り替わった時に選択位置を初期化する */

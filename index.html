@@ -207,6 +207,28 @@
                     </select>
                 </div>
 
+                <div class="setting-row">
+                    <label style="color:var(--p1-color)">P1の操作方法</label>
+                    <select id="setting-input-p1" class="custom-select" style="font-size:1.3rem; padding:5px 15px;"
+                            onchange="settings.setInputMode('p1', this.value)">
+                        <option value="kbmouse">キーボード・マウス</option>
+                        <option value="keyboard">キーボードのみ</option>
+                        <option value="gamepad">コントローラ</option>
+                    </select>
+                </div>
+                <div class="setting-row">
+                    <label style="color:var(--p2-color)">P2の操作方法</label>
+                    <select id="setting-input-p2" class="custom-select" style="font-size:1.3rem; padding:5px 15px;"
+                            onchange="settings.setInputMode('p2', this.value)">
+                        <option value="kbmouse">キーボード・マウス</option>
+                        <option value="keyboard">キーボードのみ</option>
+                        <option value="gamepad">コントローラ</option>
+                    </select>
+                </div>
+                <div class="setting-row" style="justify-content:flex-end;">
+                    <span id="input-mode-note" style="font-size:1.05rem; opacity:0.75;"></span>
+                </div>
+
                 <details class="key-config-accordion">
                     <summary class="accordion-summary">キーコンフィグ</summary>
                     <div class="accordion-content">

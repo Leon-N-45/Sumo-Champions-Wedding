@@ -245,6 +245,12 @@ const MenuNav = {
         return grid;
     },
 
+    /** 設定変更時など、カーソルの表示状態を今の操作方法に合わせ直す */
+    refreshCursors() {
+        if (this.isGridScreen(this.currentScreen())) this.paintCursors();
+        else this.hideCursors();
+    },
+
     /** カーソルを今の位置のマスへ移動させる */
     paintCursors() {
         const grid = this.ensureCursorEls();
@@ -256,7 +262,8 @@ const MenuNav = {
                 const el = grid.querySelector(`.nav-cursor.${pid}`);
                 const cell = cells[this.cursor[pid]];
                 if (!el) return;
-                if (!cell) { el.style.display = 'none'; return; }
+                // マウスで選ぶ設定のプレイヤーには枠を出さない
+                if (!cell || !settings.usesCursor(pid)) { el.style.display = 'none'; return; }
 
                 el.style.display = 'block';
                 el.style.left   = cell.offsetLeft + 'px';
@@ -339,6 +346,10 @@ const MenuNav = {
                 if (!this.currentScreen()) return;
 
                 for (const playerId of ['p1', 'p2']) {
+                    // マウスで選ぶ設定のプレイヤーは、キーで画面を動かさない
+                    // （枠を出していないため、見えないカーソルが動いてしまう）
+                    if (!settings.usesCursor(playerId)) continue;
+
                     const c = settings.current.controls[playerId];
                     let action = null;
                     if (e.code === c.l) action = 'left';

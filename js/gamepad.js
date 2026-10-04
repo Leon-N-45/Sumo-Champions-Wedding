@@ -36,11 +36,13 @@ const GamepadInput = {
         window.addEventListener('gamepadconnected', (e) => {
             console.log(`コントローラを認識しました: ${e.gamepad.id}`);
             this._refreshCount();
+            this._notifyChange();
         });
         window.addEventListener('gamepaddisconnected', (e) => {
             console.log(`コントローラが外れました: ${e.gamepad.id}`);
             this._releaseAll();
             this._refreshCount();
+            this._notifyChange();
         });
 
         const loop = () => {
@@ -52,6 +54,12 @@ const GamepadInput = {
 
     _refreshCount() {
         this._connected = this.getPads().length;
+    },
+
+    /** 抜き差しを設定画面と選択カーソルへ反映する */
+    _notifyChange() {
+        if (typeof settings !== 'undefined' && settings.updateInputModeUI) settings.updateInputModeUI();
+        if (typeof MenuNav !== 'undefined' && MenuNav.refreshCursors) MenuNav.refreshCursors();
     },
 
     /** 接続中のパッドだけを配列で返す */
@@ -132,8 +140,13 @@ const GamepadInput = {
         // 選択画面などを操作中は、face ボタンを決定・取消として扱う
         const onMenu = (typeof MenuNav !== 'undefined') && !!MenuNav.currentScreen();
 
-        this.playerOrder.forEach((playerId, i) => {
-            const pad = pads[i];
+        // 設定で「コントローラ」を選んでいるプレイヤーにだけ、順にパッドを割り当てる。
+        // 1人だけがコントローラなら、その人が1台目を使う。
+        const padPlayers = this.playerOrder.filter(p => settings.inputModeOf(p) === 'gamepad');
+
+        this.playerOrder.forEach((playerId) => {
+            const slot = padPlayers.indexOf(playerId);
+            const pad = (slot >= 0) ? pads[slot] : null;
             const controls = settings.current.controls[playerId];
             if (!controls) return;
 

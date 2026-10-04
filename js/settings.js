@@ -7,6 +7,8 @@ class SettingsManager {
         this.defaultSettings = {
             volume: { bgm: 100, se: 100, voice: 100 },
             display: { screenSize: 'responsive' },
+            // 操作方法。'kbmouse'=キーボードとマウス / 'keyboard'=キーボードのみ / 'gamepad'=コントローラ
+            inputMode: { p1: 'kbmouse', p2: 'kbmouse' },
             controls: {
                 p1: { l: 'KeyA', r: 'KeyD', u: 'KeyW', d: 'KeyS' },
                 p2: { l: 'ArrowLeft', r: 'ArrowRight', u: 'ArrowUp', d: 'ArrowDown' }
@@ -27,6 +29,7 @@ class SettingsManager {
                 this.current = { ...this.defaultSettings, ...parsed,
                     volume: { ...this.defaultSettings.volume, ...parsed.volume },
                     display: { ...this.defaultSettings.display, ...parsed.display },
+                    inputMode: { ...this.defaultSettings.inputMode, ...parsed.inputMode },
                     controls: {
                         p1: { ...this.defaultSettings.controls.p1, ...parsed.controls?.p1 },
                         p2: { ...this.defaultSettings.controls.p2, ...parsed.controls?.p2 }
@@ -97,6 +100,60 @@ class SettingsManager {
         }
         this.closeMenu();
     }
+    // ---------------------------------------------------------------
+    // 操作方法
+    // ---------------------------------------------------------------
+    /** そのプレイヤーの操作方法を返す */
+    inputModeOf(playerId) {
+        const mode = (this.current.inputMode || {})[playerId] || 'kbmouse';
+        // コントローラが外れている場合はキーボードへ退避する
+        if (mode === 'gamepad' && !this.isGamepadAvailable()) return 'keyboard';
+        return mode;
+    }
+
+    /** 選択画面のカーソルを出すか（マウスで選ぶ場合は不要） */
+    usesCursor(playerId) {
+        return this.inputModeOf(playerId) !== 'kbmouse';
+    }
+
+    isGamepadAvailable() {
+        return (typeof GamepadInput !== 'undefined') && GamepadInput.getPads().length > 0;
+    }
+
+    setInputMode(playerId, mode) {
+        if (!this.current.inputMode) this.current.inputMode = {};
+        this.current.inputMode[playerId] = mode;
+        this.updateInputModeUI();
+        // 選択画面を開いている場合は、カーソルの表示をすぐ切り替える
+        if (typeof MenuNav !== 'undefined') MenuNav.refreshCursors();
+    }
+
+    /** 選択欄の値を現在設定に合わせ、コントローラ未接続なら選べなくする */
+    updateInputModeUI() {
+        const available = this.isGamepadAvailable();
+
+        ['p1', 'p2'].forEach(p => {
+                const sel = document.getElementById(`setting-input-${p}`);
+                if (!sel) return;
+
+                const padOpt = sel.querySelector('option[value="gamepad"]');
+                if (padOpt) {
+                    padOpt.disabled = !available;
+                    padOpt.textContent = available ? 'コントローラ' : 'コントローラ（未接続）';
+                }
+
+                const mode = (this.current.inputMode || {})[p] || 'kbmouse';
+                sel.value = mode;
+            });
+
+        const note = document.getElementById('input-mode-note');
+        if (note) {
+            note.textContent = available
+                ? `コントローラ ${GamepadInput.getPads().length} 台を認識しています`
+                : 'コントローラが認識されていません';
+        }
+    }
+
     // 音量スライダー3種（BGM/SE/VOICE）を現在値に同期する共通処理
     syncVolumeUI() {
         const rows = [
@@ -116,6 +173,7 @@ class SettingsManager {
 
     updateUI() {
         this.syncVolumeUI();
+        this.updateInputModeUI();
 
         this.updateKeyBtn('p1', 'u'); this.updateKeyBtn('p1', 'd'); this.updateKeyBtn('p1', 'l'); this.updateKeyBtn('p1', 'r');
         this.updateKeyBtn('p2', 'u'); this.updateKeyBtn('p2', 'd'); this.updateKeyBtn('p2', 'l'); this.updateKeyBtn('p2', 'r');

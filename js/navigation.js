@@ -285,8 +285,8 @@ const MenuNav = {
         // コントローラはキー割り当てではなく十字キー・スティックで動かす
         if (settings.inputModeOf(playerId) === 'gamepad') return '移動：十字キー・スティック';
         const c = settings.current.controls[playerId];
-        // 上下左右の順に並べる（例：WSAD、↑↓←→）
-        return `移動：${[c.u, c.d, c.l, c.r].map(k => this.keyLabel(k)).join('')}`;
+        // 上下左右の順に並べる（例：W S A D、↑ ↓ ← →）
+        return `移動：${[c.u, c.d, c.l, c.r].map(k => this.keyLabel(k)).join(' ')}`;
     },
 
     /** 1人分の案内文（1P/2Pの表記は付けない）。移動・決定の2行 */

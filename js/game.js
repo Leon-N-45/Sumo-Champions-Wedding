@@ -1893,6 +1893,11 @@ window.onload = async () => {
         alert("ゲームの初期化に失敗しました: " + e.message);
     }
 
+    // 無操作が続いたらタイトルへ戻す
+    if (typeof IdleReturn !== 'undefined') {
+        IdleReturn.start();
+    }
+
     // コントローラでの画面操作と、パッド入力の読み取りを開始する
     if (typeof MenuNav !== 'undefined') {
         MenuNav.start();

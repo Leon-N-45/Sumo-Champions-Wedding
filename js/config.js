@@ -312,16 +312,36 @@ function bodyImageFile(playerId, isCPU, charData) {
     return `rikishi${side}${costumeSuffix(charData)}.png`;
 }
 
+// ============================================================
+// ■ 力士ごとの専用背景
+// ------------------------------------------------------------
+// 通常はタイプ（パワー・スピードなど）で背景が決まるが、
+// ここに書いた力士だけは専用の背景を使う。キーは顔画像のファイル名。
+// アイコン・力士カード・団体戦の枠のすべてに反映される。
+// スプレッドシートに「背景画像」列があれば、そちらが優先される。
+// ============================================================
+const CUSTOM_BACKGROUNDS = {
+    'kitai1.png': 'bs_kitai1.png'   // 北居の星（幼少期）
+};
+
 // タイプ(desc)＋カテゴリから、背景画像ファイル名とタイプアイコン名を決定する。
 // いずれのタイプにも一致しない場合は bg:'' を返す（呼び出し側で必要に応じてフォールバック）。
 function charTypeAssets(charData) {
     const isLegend = (charData.category === "レジェンド");
     const desc = charData.desc || "";
-    if (desc.includes('パワー'))     return { bg: isLegend ? 'chikara2_bg.png' : 'chikara1_bg.png', typeImg: 'TypePower.png' };
-    if (desc.includes('スピード'))   return { bg: isLegend ? 'hayasa2_bg.png'  : 'hayasa1_bg.png',  typeImg: 'TypeSpeed.png' };
-    if (desc.includes('テクニック')) return { bg: isLegend ? 'gizyutu2_bg.png' : 'gizyutu1_bg.png', typeImg: 'TypeTech.png' };
-    if (desc.includes('バランス'))   return { bg: isLegend ? 'baransu2_bg.png' : 'baransu1_bg.png', typeImg: 'TypeBalance.png' };
-    return { bg: '', typeImg: 'TypeBalance.png' };
+
+    let typed;
+    if (desc.includes('パワー'))          typed = { bg: isLegend ? 'chikara2_bg.png' : 'chikara1_bg.png', typeImg: 'TypePower.png' };
+    else if (desc.includes('スピード'))   typed = { bg: isLegend ? 'hayasa2_bg.png'  : 'hayasa1_bg.png',  typeImg: 'TypeSpeed.png' };
+    else if (desc.includes('テクニック')) typed = { bg: isLegend ? 'gizyutu2_bg.png' : 'gizyutu1_bg.png', typeImg: 'TypeTech.png' };
+    else if (desc.includes('バランス'))   typed = { bg: isLegend ? 'baransu2_bg.png' : 'baransu1_bg.png', typeImg: 'TypeBalance.png' };
+    else                                  typed = { bg: '', typeImg: 'TypeBalance.png' };
+
+    // 専用背景の指定があれば、背景だけ差し替える（タイプのアイコンはそのまま）
+    const imgName = (charData.img || '').split('/').pop();   // パス付きで渡る場合もある
+    const custom = (charData.bgImage || '').trim() || CUSTOM_BACKGROUNDS[imgName];
+    if (custom) typed.bg = custom;
+    return typed;
 }
 
 // 力士アイコンを20マスのグリッドへ配置する共通ロジック。

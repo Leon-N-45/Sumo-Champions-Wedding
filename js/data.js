@@ -163,6 +163,7 @@ async function loadExternalData() {
                             weight: toScore(row['体重スコア'], '体重スコア', row['名前']),
                             category: row['カテゴリ'] || "現役",
                             costume: (row['衣装'] || "").trim(), // 体画像の出し分け（例: ドレス）
+                            bgImage: (row['背景画像'] || "").trim(), // 専用背景（空ならタイプ別の背景）
                             'コスト': parseInt(row['コスト'] || 0) // 団体戦の編成コスト
                         };
                     }).filter(d => d !== null);

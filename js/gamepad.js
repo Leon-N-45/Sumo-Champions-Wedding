@@ -98,6 +98,27 @@ const GamepadInput = {
         };
     },
 
+    /** そのプレイヤーに割り当てられているパッドを返す（無ければ null） */
+    padFor(playerId) {
+        const padPlayers = this.playerOrder.filter(p => settings.inputModeOf(p) === 'gamepad');
+        const slot = padPlayers.indexOf(playerId);
+        return (slot >= 0) ? (this.getPads()[slot] || null) : null;
+    },
+
+    /**
+     * 決定・キャンセルに使うボタンの表示名を返す。
+     * パッドの種類によってボタンの刻印が違うため、名前から見分ける。
+     * 標準の並びでは 0=下、1=右 のボタン（決定=0、キャンセル=1）。
+     */
+    buttonLabels(pad) {
+        const id = (pad && pad.id) || '';
+        if (/xbox|xinput|045e/i.test(id))                                return { confirm: 'A', cancel: 'B' };
+        if (/dualshock|dualsense|playstation|054c|wireless controller/i.test(id)) return { confirm: '×', cancel: '○' };
+        if (/nintendo|057e|pro controller|joy-?con/i.test(id))           return { confirm: 'B', cancel: 'A' };
+        // アーケードスティックなど刻印が分からないものは番号で示す
+        return { confirm: 'ボタン1', cancel: 'ボタン2' };
+    },
+
     /** 決定として扱うボタン（画面操作時のみ使用） */
     isConfirm(pad) {
         return this._btn(pad, 0) || this._btn(pad, 2);

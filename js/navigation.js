@@ -254,6 +254,47 @@ const MenuNav = {
         return grid;
     },
 
+    // ---------------------------------------------------------------
+    // 力士選択画面の操作案内
+    // ---------------------------------------------------------------
+    /** キーコードを画面表示用の名前にする（KeyE → E など） */
+    keyLabel(code) {
+        if (!code) return '';
+        if (code.startsWith('Key')) return code.slice(3);
+        if (code.startsWith('Digit')) return code.slice(5);
+        return code;
+    },
+
+    /** 1人分の案内（カーソルを使わない人は空文字） */
+    guideFor(playerId) {
+        if (!settings.usesCursor(playerId)) return '';
+        const tag = (playerId === 'p1') ? '1P' : '2P';
+
+        if (settings.inputModeOf(playerId) === 'gamepad' && typeof GamepadInput !== 'undefined') {
+            const b = GamepadInput.buttonLabels(GamepadInput.padFor(playerId));
+            return `${tag}　決定：${b.confirm}　キャンセル：${b.cancel}`;
+        }
+        const ok = this.keyLabel(this.confirmKeys[playerId][0]);
+        const ng = this.keyLabel(this.cancelKeys[playerId][0]);
+        return `${tag}　決定：${ok}　キャンセル：${ng}`;
+    },
+
+    /**
+     * 「顔をドラッグして〜」の位置に、決定・キャンセルの案内を出す。
+     * キーボードのみ・コントローラの人がいる時だけ差し替え、
+     * 全員がマウス操作ならドラッグの説明のままにする。
+     * 両者が選び終えた後の「ゲーム開始だ！」の表示には触らない。
+     */
+    updateSelectGuide() {
+        const el = document.getElementById('select-instruction-text');
+        if (!el || typeof game === 'undefined' || !game) return;
+        const st = game.state.chars;
+        if (st.p1 !== null && st.p2 !== null) return;
+
+        const parts = ['p1', 'p2'].map(p => this.guideFor(p)).filter(Boolean);
+        el.textContent = parts.length ? parts.join('　　') : '顔をドラッグして体にドッキングさせろ！';
+    },
+
     /** 設定変更時など、カーソルや枠の表示を今の操作方法に合わせ直す */
     refreshCursors() {
         const screen = this.currentScreen();
@@ -265,6 +306,7 @@ const MenuNav = {
                         if (settings.usesCursor(pid)) this.previewUnderCursor(pid);
                         else game.ui.updatePreview(pid, null);        // マウス操作に切り替えたら空に戻す
                     });
+                this.updateSelectGuide();
             }
         } else {
             this.hideCursors();
@@ -371,6 +413,7 @@ const MenuNav = {
             this.paintCursors();
             this.previewUnderCursor('p1');
             this.previewUnderCursor('p2');
+            if (screen === 'charSelect') this.updateSelectGuide();
         } else {
             this.hideCursors();
             this.focus = 0;

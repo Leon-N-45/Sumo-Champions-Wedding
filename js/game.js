@@ -240,9 +240,12 @@ class GameManager {
             }
 
             // 3. テキストリセット
+            //    キーボードのみ・コントローラの人がいれば、ドラッグの説明の代わりに
+            //    決定・キャンセルのキー（ボタン）を案内する
             if (instrText) {
-                instrText.textContent = "顔をドラッグして体にドッキングさせろ！";
                 instrText.style = "";
+                if (typeof MenuNav !== 'undefined') MenuNav.updateSelectGuide();
+                else instrText.textContent = "顔をドラッグして体にドッキングさせろ！";
             }
 
             // 旧ボタン非表示のまま

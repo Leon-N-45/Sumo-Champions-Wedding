@@ -42,9 +42,20 @@ const SoundFX = {
         this.preloadSelectBGMs();
         const unlock = (audioObj) => {
             if (!audioObj) return;
+            // ミュートせずに再生すると、止めるまでの一瞬だけ曲の頭が鳴ってしまう
+            audioObj.muted = true;
             const playPromise = audioObj.play();
             if (playPromise !== undefined) {
-                playPromise.then(() => { audioObj.pause(); audioObj.currentTime = 0; }).catch(() => {});
+                playPromise.then(() => {
+                    // 既に本番のBGMとして鳴らし始めていたら止めない
+                    if (this.bgmAudio === audioObj) return;
+                    audioObj.pause();
+                    audioObj.currentTime = 0;
+                    audioObj.muted = false;
+                }).catch(() => { audioObj.muted = false; });
+            } else {
+                audioObj.pause();
+                audioObj.muted = false;
             }
         };
         unlock(this.openingAudio);
@@ -122,6 +133,7 @@ const SoundFX = {
         this.bgmAudio = isOpening ? this.openingAudio : this.charSelectAudio;
 
         this.bgmAudio.currentTime = 0;
+        this.bgmAudio.muted = false;   // 自動再生制限の解除で付けたミュートが残らないようにする
         this.updateBGMVolume();
         this.bgmAudio.play().catch(e => console.warn("選曲BGM再生エラー:", e));
     },

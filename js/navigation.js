@@ -290,26 +290,39 @@ const MenuNav = {
     },
 
     /**
-     * 「顔をドラッグして〜」の位置に操作の案内を出す。
-     *   2人の案内が同じ … 1P/2Pを付けずに1行
-     *   2人の案内が違う … 「1P　〜」「2P　〜」の2行
+     * 操作の案内を出す。
+     *   2人の案内が同じ … 「顔をドラッグして〜」の位置に1行
+     *   2人の案内が違う … 1Pの案内は1Pカードの上、2Pの案内は2Pカードの上
      *   両者が選び終えた … 「（1Pの決定）を押してゲーム開始だ！」
      */
     updateSelectGuide() {
         const el = document.getElementById('select-instruction-text');
         if (!el || typeof game === 'undefined' || !game) return;
         const st = game.state.chars;
+        const cardGuide = {
+            p1: document.getElementById('select-guide-p1'),
+            p2: document.getElementById('select-guide-p2')
+        };
+        const setCards = (t1, t2) => {
+            if (cardGuide.p1) cardGuide.p1.textContent = t1;
+            if (cardGuide.p2) cardGuide.p2.textContent = t2;
+        };
 
         if (st.p1 !== null && st.p2 !== null) {
-            el.style.whiteSpace = '';
             el.textContent = this.readyText();
+            setCards('', '');
             return;
         }
 
         const g1 = this.guideFor('p1');
         const g2 = this.guideFor('p2');
-        el.style.whiteSpace = 'pre-line';   // 改行を表示に反映する
-        el.textContent = (g1 === g2) ? g1 : `1P　${g1}\n2P　${g2}`;
+        if (g1 === g2) {
+            el.textContent = g1;
+            setCards('', '');
+        } else {
+            el.textContent = '';
+            setCards(g1, g2);
+        }
     },
 
     /** 設定変更時など、カーソルや枠の表示を今の操作方法に合わせ直す */

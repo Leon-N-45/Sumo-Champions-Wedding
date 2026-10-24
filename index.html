@@ -289,6 +289,10 @@
                 <img id="select-header-img" src="assets/img/rikishisentaku.png" alt="力士選択" class="char-select-title-img">
                 <div id="select-instruction-text" class="char-select-desc">顔をドラッグして体にドッキングさせろ！</div>
             </div>
+
+            <!-- 1Pと2Pで操作が違う時だけ、それぞれのカードの上に操作を出す -->
+            <div id="select-guide-p1" class="char-select-desc select-card-guide"></div>
+            <div id="select-guide-p2" class="char-select-desc select-card-guide"></div>
             
             <div id="sumo-format-container">
                 <button class="back-to-top-btn format-btn" onclick="game.ui.openBgmModal()" disabled title="取組中の曲は固定です">選曲</button>

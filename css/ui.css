@@ -130,6 +130,20 @@
     background: transparent;
 }
 
+/* 1P・2Pのカードの真上に出す操作案内（カードは左右400px幅） */
+.select-card-guide {
+    position: absolute;
+    top: 222px;
+    width: 400px;
+    text-align: center;
+    font-family: 'tamanegi', sans-serif !important;
+    font-weight: normal !important;
+    pointer-events: none;
+}
+.select-card-guide:empty { display: none; }
+#select-guide-p1 { left: -10px; }
+#select-guide-p2 { left: 870px; }
+
 /* --- アイコングリッド --- */
 #icon-grid {
     display: grid;

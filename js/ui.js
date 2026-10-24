@@ -883,15 +883,15 @@ class UIManager {
             let classes = ['char-select-icon'];
             if (charData) {
                 icon.dataset.id = charData.id;
-                const bgFile = charTypeAssets(charData).bg;
+                const bgCss = charBgCss(charData);
 
-                if (bgFile) {
+                if (bgCss) {
+                    // 顔 → 専用背景 → タイプ別背景 の順に重ねる
                     const faceImg = this.getImagePath(charData.img);
-                    const bgImg = `assets/img/${bgFile}`;
-                    icon.style.backgroundImage = `url('${faceImg}'), url('${bgImg}')`;
-                    icon.style.backgroundPosition = 'center, center';
-                    icon.style.backgroundSize = 'contain, cover';
-                    icon.style.backgroundRepeat = 'no-repeat, no-repeat';
+                    icon.style.backgroundImage = `url('${faceImg}'), ${bgCss}`;
+                    icon.style.backgroundPosition = 'center';
+                    icon.style.backgroundSize = 'contain, cover';   // 2つ目以降は cover が繰り返し適用される
+                    icon.style.backgroundRepeat = 'no-repeat';
                 } else {
                     icon.style.backgroundImage = `url('${this.getImagePath(charData.img)}')`;
                 }
@@ -1046,11 +1046,12 @@ class UIManager {
                 dockClass = typeMap[type] || 'dock-balance';
 
                 const assets = charTypeAssets(charData);
-                const bgFile = assets.bg;
                 const typeImgFile = assets.typeImg;
 
                 typeIconHtml = `<img src="assets/img/${typeImgFile}" class="type-kanji-icon" alt="${type}">`;
-                if (bgFile) bgHtml = `<div class="char-background" style="background-image: url('assets/img/${bgFile}');"></div>`;
+                // 専用背景（bs_〇〇.png）があれば上に重なり、無ければタイプ別背景が見える
+                const bgCss = charBgCss(charData);
+                if (bgCss) bgHtml = `<div class="char-background" style="background-image: ${bgCss.replace(/"/g, '&quot;')};"></div>`;
             }
         } else {
             const syncOffset = (performance.now() % 2000) / 1000;

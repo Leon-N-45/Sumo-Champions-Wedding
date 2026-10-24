@@ -315,14 +315,44 @@ function bodyImageFile(playerId, isCPU, charData) {
 // ============================================================
 // ■ 力士ごとの専用背景
 // ------------------------------------------------------------
-// 通常はタイプ（パワー・スピードなど）で背景が決まるが、
-// ここに書いた力士だけは専用の背景を使う。キーは顔画像のファイル名。
+// 顔画像の名前に「bs_」を付けた画像を assets/img に置くと、
+// その力士の背景として自動で使われる（コードの変更は不要）。
+//   例) 顔が hino2.png なら、背景は bs_hino2.png
+// 置いていない力士は、従来どおりタイプ別（パワー・スピード等）の背景になる。
 // アイコン・力士カード・団体戦の枠のすべてに反映される。
-// スプレッドシートに「背景画像」列があれば、そちらが優先される。
+//
+// 仕組み: 専用背景とタイプ別背景を重ねて指定し、専用背景が無ければ
+// その層が空になって下のタイプ別背景が見える。ブラウザはフォルダの中身を
+// 調べられないため、この方法で「置いたら反映」を実現している。
 // ============================================================
+const CUSTOM_BG_PREFIX = 'bs_';
+
+// 命名規則に合わない背景を使いたい時だけ、ここに書く（キーは顔画像のファイル名）。
+// スプレッドシートに「背景画像」列があれば、そちらが最優先になる。
 const CUSTOM_BACKGROUNDS = {
-    'kitai1.png': 'bs_kitai1.png'   // 北居の星（幼少期）
+    // 'hino1.png': 'special_bg.png'
 };
+
+/**
+ * その力士の背景画像を、上に重ねる順で返す。
+ * [専用背景, タイプ別背景]。専用背景が実在しなければ下の層が見える。
+ */
+function charBgFiles(charData) {
+    const files = [];
+    const imgName = (charData.img || '').split('/').pop();   // パス付きで渡る場合もある
+    const explicit = (charData.bgImage || '').trim() || CUSTOM_BACKGROUNDS[imgName];
+    if (explicit) files.push(explicit);
+    else if (imgName && CUSTOM_BG_PREFIX) files.push(CUSTOM_BG_PREFIX + imgName);
+
+    const typeBg = charTypeAssets(charData).bg;
+    if (typeBg) files.push(typeBg);
+    return files;
+}
+
+/** background-image にそのまま入れられる形で返す */
+function charBgCss(charData) {
+    return charBgFiles(charData).map(f => `url('assets/img/${f}')`).join(', ');
+}
 
 // タイプ(desc)＋カテゴリから、背景画像ファイル名とタイプアイコン名を決定する。
 // いずれのタイプにも一致しない場合は bg:'' を返す（呼び出し側で必要に応じてフォールバック）。
@@ -336,11 +366,7 @@ function charTypeAssets(charData) {
     else if (desc.includes('テクニック')) typed = { bg: isLegend ? 'gizyutu2_bg.png' : 'gizyutu1_bg.png', typeImg: 'TypeTech.png' };
     else if (desc.includes('バランス'))   typed = { bg: isLegend ? 'baransu2_bg.png' : 'baransu1_bg.png', typeImg: 'TypeBalance.png' };
     else                                  typed = { bg: '', typeImg: 'TypeBalance.png' };
-
-    // 専用背景の指定があれば、背景だけ差し替える（タイプのアイコンはそのまま）
-    const imgName = (charData.img || '').split('/').pop();   // パス付きで渡る場合もある
-    const custom = (charData.bgImage || '').trim() || CUSTOM_BACKGROUNDS[imgName];
-    if (custom) typed.bg = custom;
+    // 専用背景の重ね合わせは charBgFiles / charBgCss で行う
     return typed;
 }
 

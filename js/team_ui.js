@@ -74,16 +74,15 @@ class TeamUIManager {
 
             if (charData) {
                 icon.dataset.id = charData.id;
-                const bgFile = charTypeAssets(charData).bg;
-
+                const bgCss = charBgCss(charData);
                 const faceImg = charData.img.includes('/') ? charData.img : `assets/img/${charData.img}`;
-                const bgImg = `assets/img/${bgFile}`;
 
-                if (bgFile) {
-                    icon.style.backgroundImage = `url('${faceImg}'), url('${bgImg}')`;
-                    icon.style.backgroundPosition = 'center, center';
+                if (bgCss) {
+                    // 顔 → 専用背景 → タイプ別背景 の順に重ねる
+                    icon.style.backgroundImage = `url('${faceImg}'), ${bgCss}`;
+                    icon.style.backgroundPosition = 'center';
                     icon.style.backgroundSize = 'contain, cover';
-                    icon.style.backgroundRepeat = 'no-repeat, no-repeat';
+                    icon.style.backgroundRepeat = 'no-repeat';
                 } else {
                     icon.style.backgroundImage = `url('${faceImg}')`;
                 }
@@ -384,8 +383,13 @@ class TeamUIManager {
         const headTops = [50, 16, -10, -30, -65];
         const headTop = headTops[hVal - 1] || -30;
 
-        // 背景の選定（共通ヘルパー。未一致時はバランス背景にフォールバック）
-        let bgFile = charTypeAssets(charData).bg || (isLegend ? 'baransu2_bg.png' : 'baransu1_bg.png');
+        // 背景の選定（専用背景 bs_〇〇.png → タイプ別 の順に重ねる。
+        // タイプにも一致しない場合はバランス背景にフォールバック）
+        let bgCss = charBgCss(charData);
+        if (!charTypeAssets(charData).bg) {
+            const fallback = `url('assets/img/${isLegend ? 'baransu2_bg.png' : 'baransu1_bg.png'}')`;
+            bgCss = bgCss ? `${bgCss}, ${fallback}` : fallback;
+        }
 
         // スロット単位のCPU設定
         const st = this.game && this.game.state ? this.game.state : null;
@@ -411,7 +415,7 @@ class TeamUIManager {
 
         return `
             ${switchHtml}
-            <div class="char-background" style="background-image: url('assets/img/${bgFile}');"></div>
+            <div class="char-background" style="background-image: ${bgCss};"></div>
             <div class="preview-char-img is-selected" style="transform: scale(${combinedScale}) !important; bottom: 25px;">
                 <div class="anim-wrapper ${dockClass}">
                     <div class="rikishi-body" style="${bodyAnimStyle}">

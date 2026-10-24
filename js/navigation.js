@@ -260,6 +260,8 @@ const MenuNav = {
     /** キーコードを画面表示用の名前にする（KeyE → E など） */
     keyLabel(code) {
         if (!code) return '';
+        const arrows = { ArrowUp: '↑', ArrowDown: '↓', ArrowLeft: '←', ArrowRight: '→' };
+        if (arrows[code]) return arrows[code];
         if (code.startsWith('Key')) return code.slice(3);
         if (code.startsWith('Digit')) return code.slice(5);
         return code;
@@ -277,10 +279,20 @@ const MenuNav = {
         };
     },
 
-    /** 1人分の案内文（1P/2Pの表記は付けない） */
+    /** そのプレイヤーの移動方法の案内（マウス操作の人は空文字） */
+    moveGuideFor(playerId) {
+        if (!settings.usesCursor(playerId)) return '';
+        // コントローラはキー割り当てではなく十字キー・スティックで動かす
+        if (settings.inputModeOf(playerId) === 'gamepad') return '移動：十字キー・スティック';
+        const c = settings.current.controls[playerId];
+        return `上：${this.keyLabel(c.u)}　下：${this.keyLabel(c.d)}　左：${this.keyLabel(c.l)}　右：${this.keyLabel(c.r)}`;
+    },
+
+    /** 1人分の案内文（1P/2Pの表記は付けない）。移動・決定の2行 */
     guideFor(playerId) {
         const k = this.keysOf(playerId);
-        return k ? `決定：${k.confirm}　キャンセル：${k.cancel}` : '顔をドラッグして体にドッキングさせろ！';
+        if (!k) return '顔をドラッグして体にドッキングさせろ！';
+        return `${this.moveGuideFor(playerId)}\n決定：${k.confirm}　キャンセル：${k.cancel}`;
     },
 
     /** 両者が選び終えた後の案内（1P側の決定で案内する。2P側の決定でも始められる） */
@@ -308,6 +320,7 @@ const MenuNav = {
             if (cardGuide.p2) cardGuide.p2.textContent = t2;
         };
 
+        el.classList.remove('key-guide');
         if (st.p1 !== null && st.p2 !== null) {
             el.textContent = this.readyText();
             setCards('', '');
@@ -318,6 +331,8 @@ const MenuNav = {
         const g2 = this.guideFor('p2');
         if (g1 === g2) {
             el.textContent = g1;
+            // キー・ボタンの案内は小さめの2行で出す（ドラッグの説明は元の大きさ）
+            el.classList.toggle('key-guide', !!this.keysOf('p1'));
             setCards('', '');
         } else {
             el.textContent = '';

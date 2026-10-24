@@ -130,19 +130,34 @@
     background: transparent;
 }
 
-/* 1P・2Pのカードの真上に出す操作案内（カードは左右400px幅） */
+/* 1P・2Pのカードの真上に出す操作案内（カードは左右400px幅）。
+   行が増えても上に伸びるよう、下端をカードの上端（267px）の少し上に固定する。
+   行頭がそろうよう左揃えにし、まとまりごとカードの中央へ置く */
 .select-card-guide {
     position: absolute;
-    top: 222px;
-    width: 400px;
-    text-align: center;
+    bottom: calc(900px - 260px);
+    width: max-content;
+    transform: translateX(-50%);
+    text-align: left;
     font-family: 'tamanegi', sans-serif !important;
     font-weight: normal !important;
+    font-size: 1.1rem;
+    line-height: 1.5;
+    white-space: pre-line;
     pointer-events: none;
 }
+/* 2人とも同じ操作の時に、タイトル下へ出す移動・決定の案内 */
+#select-instruction-text.key-guide {
+    font-size: 1.1rem;
+    line-height: 1.5;
+    white-space: pre-line;
+    text-align: left;
+    width: max-content;
+    margin: 0 auto;
+}
 .select-card-guide:empty { display: none; }
-#select-guide-p1 { left: -10px; }
-#select-guide-p2 { left: 870px; }
+#select-guide-p1 { left: 190px; }   /* 1Pカードの中央 */
+#select-guide-p2 { left: 1070px; }  /* 2Pカードの中央 */
 
 /* --- アイコングリッド --- */
 #icon-grid {

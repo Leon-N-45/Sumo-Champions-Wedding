@@ -218,9 +218,11 @@ class GameManager {
             }
 
             // 3. テキスト変更
+            //    キーボードのみ・コントローラの人がいれば、1P側の決定で案内する
             if (instrText) {
-                instrText.textContent = "↑ をクリックしてゲーム開始だ！";
                 instrText.style = "";
+                if (typeof MenuNav !== 'undefined') MenuNav.updateSelectGuide();
+                else instrText.textContent = "↑ をクリックしてゲーム開始だ！";
             }
 
             // 4. 旧ボタンは非表示

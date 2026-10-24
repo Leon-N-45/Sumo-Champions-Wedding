@@ -265,34 +265,51 @@ const MenuNav = {
         return code;
     },
 
-    /** 1人分の案内（カーソルを使わない人は空文字） */
-    guideFor(playerId) {
-        if (!settings.usesCursor(playerId)) return '';
-        const tag = (playerId === 'p1') ? '1P' : '2P';
-
+    /** そのプレイヤーの決定・キャンセルの表示名（マウス操作の人は null） */
+    keysOf(playerId) {
+        if (!settings.usesCursor(playerId)) return null;
         if (settings.inputModeOf(playerId) === 'gamepad' && typeof GamepadInput !== 'undefined') {
-            const b = GamepadInput.buttonLabels(GamepadInput.padFor(playerId));
-            return `${tag}　決定：${b.confirm}　キャンセル：${b.cancel}`;
+            return GamepadInput.buttonLabels(GamepadInput.padFor(playerId));
         }
-        const ok = this.keyLabel(this.confirmKeys[playerId][0]);
-        const ng = this.keyLabel(this.cancelKeys[playerId][0]);
-        return `${tag}　決定：${ok}　キャンセル：${ng}`;
+        return {
+            confirm: this.keyLabel(this.confirmKeys[playerId][0]),
+            cancel:  this.keyLabel(this.cancelKeys[playerId][0])
+        };
+    },
+
+    /** 1人分の案内文（1P/2Pの表記は付けない） */
+    guideFor(playerId) {
+        const k = this.keysOf(playerId);
+        return k ? `決定：${k.confirm}　キャンセル：${k.cancel}` : '顔をドラッグして体にドッキングさせろ！';
+    },
+
+    /** 両者が選び終えた後の案内（1P側の決定で案内する。2P側の決定でも始められる） */
+    readyText() {
+        const k = this.keysOf('p1');
+        return k ? `${k.confirm}を押してゲーム開始だ！` : '↑ をクリックしてゲーム開始だ！';
     },
 
     /**
-     * 「顔をドラッグして〜」の位置に、決定・キャンセルの案内を出す。
-     * キーボードのみ・コントローラの人がいる時だけ差し替え、
-     * 全員がマウス操作ならドラッグの説明のままにする。
-     * 両者が選び終えた後の「ゲーム開始だ！」の表示には触らない。
+     * 「顔をドラッグして〜」の位置に操作の案内を出す。
+     *   2人の案内が同じ … 1P/2Pを付けずに1行
+     *   2人の案内が違う … 「1P　〜」「2P　〜」の2行
+     *   両者が選び終えた … 「（1Pの決定）を押してゲーム開始だ！」
      */
     updateSelectGuide() {
         const el = document.getElementById('select-instruction-text');
         if (!el || typeof game === 'undefined' || !game) return;
         const st = game.state.chars;
-        if (st.p1 !== null && st.p2 !== null) return;
 
-        const parts = ['p1', 'p2'].map(p => this.guideFor(p)).filter(Boolean);
-        el.textContent = parts.length ? parts.join('　　') : '顔をドラッグして体にドッキングさせろ！';
+        if (st.p1 !== null && st.p2 !== null) {
+            el.style.whiteSpace = '';
+            el.textContent = this.readyText();
+            return;
+        }
+
+        const g1 = this.guideFor('p1');
+        const g2 = this.guideFor('p2');
+        el.style.whiteSpace = 'pre-line';   // 改行を表示に反映する
+        el.textContent = (g1 === g2) ? g1 : `1P　${g1}\n2P　${g2}`;
     },
 
     /** 設定変更時など、カーソルや枠の表示を今の操作方法に合わせ直す */

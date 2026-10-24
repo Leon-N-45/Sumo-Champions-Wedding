@@ -319,7 +319,8 @@ class UIManager {
         // そのまま決定すれば同じ顔ぶれで続けられ、変えたい人だけ選び直せばよい。
         ['p1', 'p2'].forEach(pid => {
                 const charId = this.game.state.chars[pid];
-                if (charId !== null && charId !== undefined) this.game.selectChar(pid, charId);
+                // 選び直しではなく表示の復元なので、四股名の呼び上げは鳴らさない
+                if (charId !== null && charId !== undefined) this.game.selectChar(pid, charId, { silent: true });
             });
         this.els.res.classList.remove('visible');
         this.els.wrapper.style.display = 'none';

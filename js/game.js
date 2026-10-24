@@ -161,7 +161,12 @@ class GameManager {
         }
     }
 
-    selectChar(playerId, charId) {
+    /**
+     * 力士を選出する。
+     *   options.silent : true なら選出ボイスを鳴らさない
+     *                    （取組後に前回の力士を選び直して見せる時など）
+     */
+    selectChar(playerId, charId, options = {}) {
         this.state.chars[playerId] = charId;
 
         // アイコンの選択状態更新
@@ -176,7 +181,7 @@ class GameManager {
             });
 
         // 音声再生 (キャラ選択時)
-        if (charId !== null) {
+        if (charId !== null && !options.silent) {
             const data = RIKISHI_DATA.find(d => d.id === charId);
             if (data && data.voice) SoundFX.playVoice(data.voice);
         }

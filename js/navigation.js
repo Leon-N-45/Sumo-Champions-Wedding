@@ -259,6 +259,13 @@ const MenuNav = {
         const screen = this.currentScreen();
         if (this.isGridScreen(screen)) {
             this.paintCursors();
+            if (screen === 'charSelect') {
+                ['p1', 'p2'].forEach(pid => {
+                        if (game.state.chars[pid] !== null) return;   // 選出済みのカードは触らない
+                        if (settings.usesCursor(pid)) this.previewUnderCursor(pid);
+                        else game.ui.updatePreview(pid, null);        // マウス操作に切り替えたら空に戻す
+                    });
+            }
         } else {
             this.hideCursors();
             if (screen) this.paintButtons(this.buttonsOf(screen));
@@ -308,6 +315,8 @@ const MenuNav = {
         // 団体戦は3人分の枠に直接表示されるため、下見表示は個人戦のみ
         if (this.currentScreen() !== 'charSelect') return;
         if (game.state.chars[playerId] !== null) return;
+        // マウスで選ぶ人にはカーソルが無いので、下見を出すと選び済みに見えてしまう
+        if (!settings.usesCursor(playerId)) return;
 
         const cell = this.gridCells()[this.cursor[playerId]];
         if (!this.isSelectable(cell)) return;

@@ -243,7 +243,10 @@ class TeamGameManager {
         const used = this.state.usedChars[player];
         const controls = typeof settings !== 'undefined' ? settings.current.controls[player] : null;
 
-        const keys = controls ? [controls.l, controls.u, controls.r] : ['A', 'W', 'D'];
+        // コントローラで遊ぶプレイヤーには十字キーの←↑→で案内する（パッドの入力は割り当てキーに変換される）
+        const usesPad = typeof settings !== 'undefined' && settings.inputModeOf(player) === 'gamepad';
+        const keys = usesPad ? ['ArrowLeft', 'ArrowUp', 'ArrowRight']
+                   : controls ? [controls.l, controls.u, controls.r] : ['A', 'W', 'D'];
         const formatKey = (k) => {
             let name = k.replace('Key', '');
             if(name === 'ArrowLeft') return '←';

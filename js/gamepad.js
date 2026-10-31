@@ -244,6 +244,8 @@ const GamepadInput = {
 
         // 選択画面などを操作中は、face ボタンを決定・取消として扱う
         const onMenu = (typeof MenuNav !== 'undefined') && !!MenuNav.currentScreen();
+        // 団体戦の選出画面は十字キーの←↑→で選ぶので、上も十字キーで出せるようにする
+        const onSecret = typeof window.teamGame !== 'undefined' && !!window.teamGame.state.isSecretPhase;
 
         // 設定で「コントローラ」を選んでいるプレイヤーにだけ、順にパッドを割り当てる。
         // 1人だけがコントローラなら、その人が1台目を使う。
@@ -256,11 +258,14 @@ const GamepadInput = {
             if (!controls) return;
 
             // パッドが繋がっていない場合は、押しっぱなしの状態だけ解除する
-            const dirs = pad ? this.readDirections(pad, onMenu) : { l: false, r: false, u: false, d: false };
+            const dirs = pad ? this.readDirections(pad, onMenu || onSecret) : { l: false, r: false, u: false, d: false };
             const held = this._held[playerId];
 
             ['l', 'r', 'u', 'd'].forEach(dir => this._apply(held, dir, dirs[dir], controls[dir]));
             this._highlightFace(playerId, pad);
+
+            // スタートボタンは Esc と同じ（取組中の中断メニューを開閉する）
+            this._apply(held, 'start', !!(pad && this._btn(pad, 9)), 'Escape');
 
             // 決定・取消は画面操作中のみ。取組中は face ボタンをいなし・溜めに使う
             const confirmOn = onMenu && pad ? this.isConfirm(pad) : false;
@@ -279,6 +284,7 @@ const GamepadInput = {
                 ['l', 'r', 'u', 'd'].forEach(dir => this._apply(held, dir, false, controls[dir]));
                 this._apply(held, 'confirm', false, MenuNav.confirmKeys[playerId][0]);
                 this._apply(held, 'cancel',  false, MenuNav.cancelKeys[playerId][0]);
+                this._apply(held, 'start',   false, 'Escape');
             });
     },
 

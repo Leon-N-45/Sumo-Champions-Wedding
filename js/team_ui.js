@@ -295,11 +295,9 @@ class TeamUIManager {
                 const costValEl = document.getElementById(`${player}-cost-val`);
                 const costBarEl = document.getElementById(`${player}-cost-bar`);
 
-                // 無制限(99)の場合は表示を「∞」にする
-                const displayMax = this.MAX_COST >= 99 ? '∞' : this.MAX_COST;
-
+                // 無制限(99)の場合は上限を出さず、コストの合計を「戦力」として表示する
                 if (costValEl) {
-                    costValEl.textContent = `${totalCost} / ${displayMax}`;
+                    costValEl.textContent = this.MAX_COST >= 99 ? `戦力：${totalCost}` : `${totalCost} / ${this.MAX_COST}`;
                     costValEl.style.color = (totalCost > this.MAX_COST) ? '#8b0000' : '#ffffff';
                 }
                 if (costBarEl) {

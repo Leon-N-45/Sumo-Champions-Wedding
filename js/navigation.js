@@ -44,6 +44,7 @@ const MenuNav = {
     currentScreen() {
         if (this.isActive('settings-modal')) return 'modal';
         if (document.getElementById('char-detail-overlay')) return 'modal';
+        if (this.isActive('pause-menu')) return 'pause';
 
         // 力士選択へ戻っても結果画面のボタンは要素として残るため、
         // style だけでなく実際に画面に出ているかで判定する。
@@ -65,8 +66,14 @@ const MenuNav = {
     /** 画面上で押せるボタンを順番に並べて返す */
     buttonsOf(screen) {
         if (screen === 'title') {
+            // 押せないボタン（座学など）はカーソルで止まらないよう飛ばす
             return [...document.querySelectorAll('#start-btn-group button')]
-                .filter(b => b.offsetParent !== null);
+                .filter(b => b.offsetParent !== null && !b.disabled);
+        }
+        if (screen === 'pause') {
+            // 設定画面はコントローラで閉じられないため、中断メニューからは選ばせない（マウスでは押せる）
+            return [...document.querySelectorAll('#pause-menu .pause-btn-list button')]
+                .filter(b => b.offsetParent !== null && !b.disabled && !/設定/.test(b.textContent));
         }
         if (screen === 'result') {
             return [...document.querySelectorAll('#final-btn-container button')]
@@ -88,6 +95,8 @@ const MenuNav = {
 
         if (screen === 'charSelect') return this.handleCharSelect(playerId, action);
         if (screen === 'teamSelect') return this.handleTeamSelect(playerId, action);
+        // 中断メニューは取消でも取組に戻る
+        if (screen === 'pause' && action === 'cancel') { game.togglePauseMenu(); return true; }
         return this.handleButtons(screen, action);
     },
 

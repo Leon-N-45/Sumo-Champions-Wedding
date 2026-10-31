@@ -502,12 +502,21 @@ const MenuNav = {
                     else if (this.confirmKeys[playerId].includes(e.code)) action = 'confirm';
                     else if (this.cancelKeys[playerId].includes(e.code)) action = 'cancel';
 
+                    // 力士選択画面では、取消を長押しするとタイトルへ戻る
+                    if (action === 'cancel' && this.isGridScreen(this.currentScreen())) this.startBackHold(playerId);
+
                     if (action && this.handle(playerId, action)) {
                         e.preventDefault();
                         return;
                     }
                 }
             });
+        window.addEventListener('keyup', (e) => {
+                for (const playerId of ['p1', 'p2']) {
+                    if (this.cancelKeys[playerId].includes(e.code)) this.stopBackHold(playerId);
+                }
+            });
+        window.addEventListener('blur', () => { this.stopBackHold('p1'); this.stopBackHold('p2'); });
 
         // 画面が変わったら選択位置を初期化する
         let lastScreen = null;
@@ -524,4 +533,57 @@ const MenuNav = {
 
     // ゲームパッドの入力は gamepad.js がキーイベントとして発行するため、
     // 上の keydown 監視がそのまま拾う。専用の受け口は不要。
+
+    // ---------------------------------------------------------------
+    // 取消の長押しでタイトルへ戻る（力士選択画面のみ）
+    // ---------------------------------------------------------------
+    backHoldMs: 2000,
+    _backHold: { p1: null, p2: null },   // 押し始めた時刻
+    _backHoldRaf: null,
+
+    /** いま表示中の力士選択画面の「戻る」ボタン */
+    backButton() {
+        const screenId = (this.currentScreen() === 'teamSelect') ? 'team-select-screen' : 'char-select-screen';
+        return document.querySelector(`#${screenId} .back-to-top-btn:not(.format-btn)`);
+    },
+
+    startBackHold(playerId) {
+        if (this._backHold[playerId] !== null) return;
+        this._backHold[playerId] = performance.now();
+        if (!this._backHoldRaf) this._backHoldRaf = requestAnimationFrame(() => this._tickBackHold());
+    },
+
+    stopBackHold(playerId) {
+        this._backHold[playerId] = null;
+    },
+
+    /** 長押しの進み具合を「戻る」ボタンに紫で塗り、満ちたらタイトルへ戻る */
+    _tickBackHold() {
+        this._backHoldRaf = null;
+        const starts = ['p1', 'p2'].map(p => this._backHold[p]).filter(t => t !== null);
+        const btn = this.backButton();
+        const onGrid = this.isGridScreen(this.currentScreen());
+
+        // 離した・画面が変わった場合は塗りを消して終わる
+        if (!starts.length || !btn || !onGrid) {
+            if (!onGrid) { this._backHold.p1 = null; this._backHold.p2 = null; }
+            document.querySelectorAll('.back-to-top-btn.holding').forEach(b => {
+                b.classList.remove('holding', 'hold-dark');
+                b.style.removeProperty('--hold');
+            });
+            return;
+        }
+
+        const ratio = Math.min(1, (performance.now() - Math.min(...starts)) / this.backHoldMs);
+        btn.classList.add('holding');
+        btn.classList.toggle('hold-dark', ratio >= 0.5);   // 半分を超えたら文字を白くして読めるようにする
+        btn.style.setProperty('--hold', `${(ratio * 100).toFixed(1)}%`);
+
+        if (ratio >= 1) {
+            this._backHold.p1 = null; this._backHold.p2 = null;
+            btn.click();
+            return;
+        }
+        this._backHoldRaf = requestAnimationFrame(() => this._tickBackHold());
+    },
 };

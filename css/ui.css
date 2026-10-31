@@ -1790,6 +1790,13 @@ input:checked + .slider:before {
     right: auto !important;
 }
 
+/* 取消（B）長押し中：「戻る」ボタンを左から紫で塗っていく（満ちたらタイトルへ） */
+.back-to-top-btn.holding::after {
+    background: linear-gradient(to right, #745399 var(--hold, 0%), #fdfbf5 var(--hold, 0%)) !important;
+    transition: none;
+}
+.back-to-top-btn.holding.hold-dark { color: #fff !important; }
+
 /* ✕ボタンのデザイン（絶対に消えないCSS図形方式） */
 .popover-close-btn {
     position: absolute;

@@ -457,9 +457,9 @@ class UIManager {
 
     /**
      * 取組画面の操作説明（コントローラ版）。
-     *   溜め   … A or Y（どちらを押してもよい）
-     *   いなし … X or B
-     *   移動   … ← →
+     *   ボタン欄 … 十字キーの←→と、4つのボタン（パッドと同じ並び）
+     *   説明欄   … 溜め A／いなし X／移動 ←→
+     * 実際には溜めは A・Y、いなしは X・B のどちらでも出るが、説明は分かりやすく1つだけ書く。
      * 押したボタンが光る（←→はキーイベント経由、face ボタンは GamepadInput が直接光らせる）。
      */
     padControlsHtml(playerId, c) {
@@ -468,17 +468,29 @@ class UIManager {
         const roles = GamepadInput.buttonRoles(pad);
         // 任天堂配置はSFCと同じ色（A赤・B黄・X青・Y緑）で塗る
         const color = i => GamepadInput.isNintendo(pad) ? ` sfc-${labels[i].toLowerCase()}` : '';
-        const face = i => `<span class="key mini-key pad-mini${color(i)}" data-pad="${playerId}" data-btn="${i}">${labels[i]}</span>`;
-        const either = list => list.map(face).join('<span class="or-text">or</span>');
+        const attrs = i => `data-pad="${playerId}" data-btn="${i}"`;
+        // ボタン番号は位置で決まる（0=下、1=右、2=左、3=上）
+        const face = (i, pos) => `<span class="key block-key pad-face pad-${pos}${color(i)}" ${attrs(i)}>${labels[i]}</span>`;
+        const mini = i => `<span class="key mini-key pad-mini${color(i)}" ${attrs(i)}>${labels[i]}</span>`;
 
-        return `
-            <div class="control-layout ${playerId}-layout pad-layout">
-                <div class="key-desc-list">
-                    <div><span class="key-area">${either(roles.down)}</span> 溜め</div>
-                    <div><span class="key-area">${either(roles.up)}</span> いなし</div>
-                    <div><span class="key-area"><span class="key mini-key" data-code="${c.l}">←</span><span class="key mini-key" data-code="${c.r}">→</span></span> 移動</div>
+        const visual = `
+            <div class="pad-visual">
+                <div class="pad-dpad">
+                    <span class="key block-key" data-code="${c.l}">←</span>
+                    <span class="key block-key" data-code="${c.r}">→</span>
                 </div>
+                <div class="pad-diamond">${face(3, 't')}${face(2, 'l')}${face(1, 'r')}${face(0, 'b')}</div>
             </div>`;
+        const desc = `
+            <div class="key-desc-list">
+                <div><span class="key-area">${mini(roles.down[0])}</span> 溜め</div>
+                <div><span class="key-area">${mini(roles.up[0])}</span> いなし</div>
+                <div><span class="key-area"><span class="key mini-key" data-code="${c.l}">←</span><span class="key mini-key" data-code="${c.r}">→</span></span> 移動</div>
+            </div>`;
+
+        return (playerId === 'p1')
+            ? `<div class="control-layout p1-layout pad-layout">${visual}${desc}</div>`
+            : `<div class="control-layout p2-layout pad-layout">${desc}${visual}</div>`;
     }
 
     resetVisuals(p1, p2) {

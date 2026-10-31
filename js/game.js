@@ -376,10 +376,10 @@ class GameManager {
         this.state.matches = parseInt(document.getElementById('match-count-select').value);
         this.state.deuce = document.getElementById('deuce-check').checked;
 
-        // 結婚式Verは1番勝負に固定（画面の選択より優先する）
+        // 結婚式Verは取組数を固定（画面の選択より優先する）。過半数を先取した時点で決着するので優勝決定戦は使わない
         if (typeof FIXED_MATCH_COUNT === 'number' && FIXED_MATCH_COUNT > 0) {
             this.state.matches = FIXED_MATCH_COUNT;
-            if (FIXED_MATCH_COUNT === 1) this.state.deuce = false;
+            this.state.deuce = false;
         }
 
         if (this.state.isTeamMode) {
@@ -1834,6 +1834,14 @@ class GameManager {
         }
 
         // ここから下は個人戦用の既存ロジック
+        // 取組数を固定している場合は先取制（3番なら2勝した時点で優勝）
+        if (typeof FIXED_MATCH_COUNT === 'number' && FIXED_MATCH_COUNT > 0) {
+            const need = Math.floor(max / 2) + 1;
+            if (wins1 >= need || wins2 >= need) {
+                const winnerObj = wins1 > wins2 ? this.p1 : this.p2;
+                return { isTournamentOver: true, winnerName: winnerObj.name, winnerObj };
+            }
+        }
         if (this.state.deuce) {
             const diff = Math.abs(wins1 - wins2);
             if (this.state.inDecider) {

@@ -125,7 +125,7 @@ const GamepadInput = {
             const on = !!(pad && active && this._btn(pad, i));
             if (on === !!this._faceLit[playerId][i]) continue;
             this._faceLit[playerId][i] = on;
-            document.querySelectorAll(`.pad-mini[data-pad="${playerId}"][data-btn="${i}"]`)
+            document.querySelectorAll(`[data-pad="${playerId}"][data-btn="${i}"]`)
                 .forEach(el => el.classList.toggle('key-pressed', on));
         }
     },

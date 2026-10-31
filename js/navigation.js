@@ -233,6 +233,8 @@ const MenuNav = {
             return true;
         }
 
+        // 選び終えた後はカーソルを止める（取消で選び直せる）
+        if (game.state.chars[playerId] !== null) return false;
         return this.moveCursor(playerId, action);
     },
 

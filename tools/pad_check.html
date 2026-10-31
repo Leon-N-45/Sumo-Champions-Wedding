@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<title>コントローラ確認</title>
+<style>
+    /* 接続したコントローラの「ボタン番号」「スティック（軸）の値」を確かめるためのページ */
+    body { font-family: sans-serif; background: #f6f3ea; color: #222; margin: 0; padding: 24px; }
+    h1 { font-size: 22px; margin: 0 0 8px; }
+    p { margin: 4px 0 16px; }
+    .pad { background: #fff; border: 2px solid #333; border-radius: 10px; padding: 14px 18px; margin-bottom: 16px; }
+    .id { font-weight: bold; word-break: break-all; }
+    .btns { display: flex; flex-wrap: wrap; gap: 6px; margin: 10px 0; }
+    .btn { width: 46px; height: 46px; border-radius: 8px; border: 2px solid #999; display: flex; align-items: center; justify-content: center; font-size: 18px; background: #eee; }
+    .btn.on { background: #e03a3a; border-color: #a00; color: #fff; }
+    .axes { font-family: monospace; font-size: 16px; }
+    #log { font-family: monospace; font-size: 15px; background: #fff; border: 1px solid #aaa; padding: 10px; height: 200px; overflow-y: auto; white-space: pre; }
+</style>
+</head>
+<body>
+<h1>コントローラ確認</h1>
+<p>コントローラのボタンを何か押すと表示されます。押したボタンの番号が赤くなります。</p>
+<div id="pads">（まだ認識されていません。ボタンを押してください）</div>
+<h1>押した履歴</h1>
+<div id="log"></div>
+<script>
+    const prev = {};
+    const log = [];
+    window.__padLog = log;   // 動作確認用に履歴を外から読めるようにしておく
+
+    function frame() {
+        const pads = [...(navigator.getGamepads ? navigator.getGamepads() : [])].filter(p => p);
+        const box = document.getElementById('pads');
+        if (pads.length) {
+            box.innerHTML = pads.map(p => `
+                <div class="pad">
+                    <div class="id">${p.index + 1}台目：${p.id}</div>
+                    <div>mapping: "${p.mapping}"　ボタン数: ${p.buttons.length}　軸数: ${p.axes.length}</div>
+                    <div class="btns">${p.buttons.map((b, i) => `<div class="btn ${b.pressed ? 'on' : ''}">${i}</div>`).join('')}</div>
+                    <div class="axes">${p.axes.map((a, i) => `軸${i}: ${a.toFixed(2)}`).join('　')}</div>
+                </div>`).join('');
+        }
+        pads.forEach(p => {
+            const key = p.index;
+            const was = prev[key] || { b: [], a: [] };
+            p.buttons.forEach((b, i) => {
+                if (b.pressed && !was.b[i]) addLog(`${p.index + 1}台目 ボタン${i} を押した`);
+            });
+            // 値が変わった軸を記録する（十字キーが1本の軸に出るパッドもあるため、値そのもので比べる）
+            p.axes.forEach((a, i) => {
+                const now = a.toFixed(2);
+                if (was.a[i] !== undefined && now !== was.a[i] && Math.abs(a) > 0.1) addLog(`${p.index + 1}台目 軸${i} = ${now}`);
+            });
+            prev[key] = {
+                b: p.buttons.map(b => b.pressed),
+                a: p.axes.map(a => a.toFixed(2))
+            };
+        });
+        requestAnimationFrame(frame);
+    }
+    function addLog(text) {
+        log.push(text);
+        const el = document.getElementById('log');
+        el.textContent = log.slice(-200).join('\n');
+        el.scrollTop = el.scrollHeight;
+    }
+    requestAnimationFrame(frame);
+</script>
+</body>
+</html>

@@ -162,13 +162,51 @@ const MenuNav = {
             btns[this.focus].click();
             return true;
         }
-        const step = (action === 'right' || action === 'down') ? 1
-                   : (action === 'left' || action === 'up') ? -1 : 0;
-        if (!step) return false;
+        const next = this.neighborButton(btns, this.focus, action);
+        if (next < 0) return false;
 
-        this.focus = (this.focus + step + btns.length) % btns.length;
+        this.focus = next;
         this.paintButtons(btns);
         return true;
+    },
+
+    /**
+     * 画面上の並びどおりに、押した方向にある一番近いボタンを返す（無ければ -1。端で折り返さない）。
+     * 例：タイトルは 個人戦 → 右で団体戦、下で設定。団体戦 → 下で設定（真下の座学は押せないため）。
+     *   左右 … 同じ段のボタンだけ
+     *   上下 … 真上・真下を優先し、無ければ隣の段の一番近いボタン
+     */
+    neighborButton(btns, from, action) {
+        const dir = { left: [-1, 0], right: [1, 0], up: [0, -1], down: [0, 1] }[action];
+        if (!dir) return -1;
+        const horizontal = dir[0] !== 0;
+        const rects = btns.map(b => b.getBoundingClientRect());
+        const center = r => ({ x: r.left + r.width / 2, y: r.top + r.height / 2 });
+        const cur = rects[from], c = center(cur);
+        // 押した方向と直角の向きに、2つのボタンが重なっているか（同じ段・同じ列か）
+        const lined = r => horizontal
+            ? (r.top < cur.bottom && r.bottom > cur.top)
+            : (r.left < cur.right && r.right > cur.left);
+
+        const pick = (onlyLined) => {
+            let best = -1, bestScore = Infinity;
+            rects.forEach((r, i) => {
+                if (i === from || (onlyLined && !lined(r))) return;
+                const p = center(r);
+                const dx = p.x - c.x, dy = p.y - c.y;
+                const along = dx * dir[0] + dy * dir[1];      // 押した方向へどれだけ進むか
+                const across = Math.abs(horizontal ? dy : dx); // 押した方向からのずれ
+                // 反対側は対象外。上下は、別の段（半段以上ずれている）ボタンだけを対象にする
+                if (along <= (horizontal ? 1 : cur.height / 2)) return;
+                const score = along + across * 2;
+                if (score < bestScore) { bestScore = score; best = i; }
+            });
+            return best;
+        };
+
+        const lineBest = pick(true);
+        if (lineBest >= 0 || horizontal) return lineBest;
+        return pick(false);
     },
 
     /** キーやコントローラで画面を操作するプレイヤーがいるか */

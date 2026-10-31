@@ -1790,6 +1790,19 @@ input:checked + .slider:before {
     right: auto !important;
 }
 
+/* 団体戦：アイコン欄の中央上に「力士詳細：START」 */
+#team-detail-hint {
+    position: absolute;
+    top: 268px;
+    left: 0;
+    width: 100%;
+    text-align: center;
+    font-size: 1.1rem;
+    pointer-events: none;
+    z-index: 40;
+}
+#team-detail-hint:empty { display: none; }
+
 /* 取消（B）長押し中：「戻る」ボタンを左から紫で塗っていく（満ちたらタイトルへ） */
 .back-to-top-btn.holding::after {
     background: linear-gradient(to right, #745399 var(--hold, 0%), #fdfbf5 var(--hold, 0%)) !important;

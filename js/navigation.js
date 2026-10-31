@@ -369,6 +369,7 @@ const MenuNav = {
                     });
                 this.updateSelectGuide();
             }
+            if (screen === 'teamSelect') this.updateDetailHint();
         } else {
             this.hideCursors();
             if (screen) this.paintButtons(this.buttonsOf(screen));
@@ -475,6 +476,7 @@ const MenuNav = {
             this.previewUnderCursor('p1');
             this.previewUnderCursor('p2');
             if (screen === 'charSelect') this.updateSelectGuide();
+            if (screen === 'teamSelect') this.updateDetailHint();
         } else {
             this.hideCursors();
             this.focus = 0;
@@ -507,8 +509,10 @@ const MenuNav = {
                     else if (this.confirmKeys[playerId].includes(e.code)) action = 'confirm';
                     else if (this.cancelKeys[playerId].includes(e.code)) action = 'cancel';
 
-                    // 力士選択画面では、取消を長押しするとタイトルへ戻る
-                    if (action === 'cancel' && this.isGridScreen(this.currentScreen())) this.startBackHold(playerId);
+                    // 力士選択画面では、選んだ力士がいなければ取消の長押しでタイトルへ戻る
+                    // （選んでいる時の取消は選び直しだけにして、戻る操作と重ならないようにする）
+                    if (action === 'cancel' && this.isGridScreen(this.currentScreen())
+                        && !this.hasPicked(playerId)) this.startBackHold(playerId);
 
                     if (action && this.handle(playerId, action)) {
                         e.preventDefault();
@@ -544,6 +548,20 @@ const MenuNav = {
     // 団体戦の詳細カード（スタートボタン／Escで開閉）
     // ---------------------------------------------------------------
     /**
+     * 団体戦のアイコン欄の上に、詳細カードを開くボタンを案内する。
+     * コントローラの人がいれば START、キーボードだけなら Esc。
+     * マウスだけの場合は軍配ボタンが出るので案内しない。
+     */
+    updateDetailHint() {
+        const el = document.getElementById('team-detail-hint');
+        if (!el) return;
+        const cursorPlayers = ['p1', 'p2'].filter(p => settings.usesCursor(p));
+        if (!cursorPlayers.length) { el.textContent = ''; return; }
+        const usesPad = cursorPlayers.some(p => settings.inputModeOf(p) === 'gamepad');
+        el.textContent = `力士詳細：${usesPad ? 'START' : 'Esc'}`;
+    },
+
+    /**
      * 団体戦の力士選択で、カーソルを合わせた力士の詳細カードを開く。
      * 開いている間は、スタート・決定・取消のどれでも閉じる。
      * 処理した場合は true を返す。
@@ -576,6 +594,14 @@ const MenuNav = {
     backHoldMs: 2000,
     _backHold: { p1: null, p2: null },   // 押し始めた時刻
     _backHoldRaf: null,
+
+    /** そのプレイヤーが力士を選んでいるか（団体戦は枠に1人でも入っていれば） */
+    hasPicked(playerId) {
+        if (this.currentScreen() === 'teamSelect') {
+            return teamGame.state.teams[playerId].some(id => id !== null);
+        }
+        return game.state.chars[playerId] !== null;
+    },
 
     /** いま表示中の力士選択画面の「戻る」ボタン */
     backButton() {

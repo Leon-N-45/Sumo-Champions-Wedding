@@ -521,7 +521,8 @@ class TeamUIManager {
             }
 
             if (instrText) {
-                instrText.textContent = "↑ をクリックしてゲーム開始だ！";
+                instrText.textContent = (typeof MenuNav !== 'undefined')
+                    ? MenuNav.readyText() : "↑ をクリックしてゲーム開始だ！";
                 instrText.style = "";
             }
 

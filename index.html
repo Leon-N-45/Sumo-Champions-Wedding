@@ -30,7 +30,7 @@
 
                 <div id="sumo-format-container">
                     <button class="back-to-top-btn format-btn" onclick="game.ui.openBgmModal()" disabled title="取組中の曲は固定です">選曲</button>
-                    <button class="back-to-top-btn format-btn" onclick="document.getElementById('team-format-popover').classList.toggle('active')">相撲形式</button>
+                    <button class="back-to-top-btn format-btn" onclick="document.getElementById('team-format-popover').classList.toggle('active')" disabled title="結婚式Verは勝ち抜き・コスト制限なしで固定です">相撲形式</button>
                    <div id="team-format-popover" class="format-popover" style="position: absolute; top: 50px; right: 0; background: #fff; border: 3px solid #000; border-radius: 8px; padding: 20px;  z-index: 400; display: none; flex-direction: column; gap: 15px; width: 320px;">
                         <div class="popover-close-btn" onclick="document.getElementById('team-format-popover').classList.remove('active')" style="cursor:pointer; text-align:right; font-weight:bold;">✕</div>
                         
@@ -131,7 +131,10 @@
 
   <div id="start-screen" class="screen active">
     <div id="start-content-wrapper" style="width: 1260px; height: 900px; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); transform-origin: center center; display: flex; flex-direction: column; align-items: center; justify-content: center;">
-        <img src="assets/img/title.png" alt="スモチャン" class="title-logo">
+        <div class="title-logo-group">
+            <img src="assets/img/title.png" alt="スモチャン" class="title-logo">
+            <img src="assets/img/WeddingTitle.png" alt="For The Wedding of Shinano &amp; Yuki" class="wedding-title">
+        </div>
         
         <div style="margin-top: 40px; height: 260px; display: flex; flex-direction: column; align-items: center; justify-content: center;">
             <div id="network-loading-msg">ネットワーク巡業中…</div>
@@ -296,7 +299,7 @@
             
             <div id="sumo-format-container">
                 <button class="back-to-top-btn format-btn" onclick="game.ui.openBgmModal()" disabled title="取組中の曲は固定です">選曲</button>
-                <button class="back-to-top-btn format-btn" onclick="document.getElementById('format-popover').classList.toggle('active')" disabled title="1番勝負に固定しています">相撲形式</button>
+                <button class="back-to-top-btn format-btn" onclick="document.getElementById('format-popover').classList.toggle('active')" disabled title="二本先取に固定しています">相撲形式</button>
 
                 <div id="format-popover">
                     <div class="popover-close-btn" onclick="document.getElementById('format-popover').classList.remove('active')">✕</div>

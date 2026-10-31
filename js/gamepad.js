@@ -26,6 +26,9 @@ const GamepadInput = {
     // 何台目のパッドをどのプレイヤーに割り当てるか
     playerOrder: ['p1', 'p2'],
 
+    // セレクトボタンを押した時に発行するキーコード（キーボードには無い名前にして、他の操作と混ざらないようにする）
+    SELECT_CODE: 'GamepadSelect',
+
     // 押しっぱなし状態の記録（離した瞬間を検出するために保持する）
     _held: { p1: {}, p2: {} },
     _running: false,
@@ -266,6 +269,8 @@ const GamepadInput = {
 
             // スタートボタンは Esc と同じ（取組中の中断メニューを開閉する）
             this._apply(held, 'start', !!(pad && this._btn(pad, 9)), 'Escape');
+            // セレクトボタンは専用のコードで流す（勝ち抜きの選出発表のスキップに使う）
+            this._apply(held, 'select', !!(pad && this._btn(pad, 8)), this.SELECT_CODE);
 
             // 決定・取消は画面操作中のみ。取組中は face ボタンをいなし・溜めに使う
             const confirmOn = onMenu && pad ? this.isConfirm(pad) : false;
@@ -285,6 +290,7 @@ const GamepadInput = {
                 this._apply(held, 'confirm', false, MenuNav.confirmKeys[playerId][0]);
                 this._apply(held, 'cancel',  false, MenuNav.cancelKeys[playerId][0]);
                 this._apply(held, 'start',   false, 'Escape');
+                this._apply(held, 'select',  false, this.SELECT_CODE);
             });
     },
 

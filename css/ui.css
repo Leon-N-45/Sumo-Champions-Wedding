@@ -34,15 +34,28 @@
     z-index: 10;
 }
 
+/* ロゴと結婚式の添え書きを一緒に浮遊させる */
+.title-logo-group {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-bottom: 20px;
+    animation: floatLogo 5s ease-in-out infinite alternate;
+    will-change: transform;
+    transform: translateZ(0);
+}
 .title-logo {
     /* 最初から「小さいサイズ」で描画させ、JSとのギャップを埋める */
     width: 500px;
     max-width: 100%;
     height: auto;
-    margin-bottom: 20px;
-    animation: floatLogo 5s ease-in-out infinite alternate;
-    will-change: transform;
-    transform: translateZ(0);
+}
+/* 「For The Wedding of Shinano & Yuki」：ロゴの下に小さく添える */
+.wedding-title {
+    width: 380px;
+    max-width: 100%;
+    height: auto;
+    margin-top: 6px;
 }
 
 /* メインのスタートボタンもサイズダウン */

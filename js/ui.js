@@ -157,12 +157,16 @@ class UIManager {
         const reveal = (id, op = '1') => { const el = document.getElementById(id); if (el) el.style.opacity = op; };
         const isAborted = () => (this.game && this.game.state && this.game.state.aborted);
 
-        // スキップ制御：Spaceで紹介を飛ばして開始前状態へ
+        // スキップ制御：Space（1Pがコントローラの時はSELECT）で紹介を飛ばして開始前状態へ
+        const p1Pad = typeof GamepadInput !== 'undefined' && typeof settings !== 'undefined'
+            && settings.inputModeOf('p1') === 'gamepad';
+        const skipCode = p1Pad ? GamepadInput.SELECT_CODE : 'Space';
+        const skipLabel = p1Pad ? 'SELECT' : 'Space';
         this._introSkip = false;
         let skipWaiters = [];
         const onSkip = () => { const w = skipWaiters; skipWaiters = []; w.forEach(fn => { try { fn(); } catch (e) {} }); };
         const skipHandler = (e) => {
-            if (e.code === 'Space') {
+            if (e.code === skipCode) {
                 e.preventDefault();
                 this._introSkip = true;
                 if (typeof SoundFX !== 'undefined' && SoundFX.stopVoices) SoundFX.stopVoices();
@@ -195,7 +199,7 @@ class UIManager {
         const lp1 = tg.state.kachinuki.lineup.p1;
         const lp2 = tg.state.kachinuki.lineup.p2;
         const labels = ['先鋒', '中堅', '大将'];
-        const skipHintHtml = `<div style="position:absolute; top:34px; right:50px; color:#fff; font-size:1.5rem; z-index:6; opacity:0.9;">Space：スキップ</div>`;
+        const skipHintHtml = `<div style="position:absolute; top:34px; right:50px; color:#fff; font-size:1.5rem; z-index:6; opacity:0.9;">${skipLabel}：スキップ</div>`;
 
         // ステージへ切替（裏が覗かないよう day-overlay は不透明のまま）
         this.els.select.classList.remove('active');

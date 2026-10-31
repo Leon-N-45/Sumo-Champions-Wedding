@@ -224,18 +224,19 @@ const GamepadInput = {
      * どちらの経路も特別扱いせずに動かせる。
      * document から発行して window まで伝播させる。
      */
-    _send(code, type) {
+    _send(code, type, playerId) {
         if (!code) return;
-        document.dispatchEvent(new KeyboardEvent(type, {
-                code, bubbles: true, cancelable: true
-            }));
+        const ev = new KeyboardEvent(type, { code, bubbles: true, cancelable: true });
+        // どのプレイヤーのパッドか（スタートで詳細カードを開く時に、その人のカーソルを使うため）
+        if (playerId) ev.padPlayer = playerId;
+        document.dispatchEvent(ev);
     },
 
     /** 状態が変わった時だけキーイベントを発行する */
-    _apply(held, key, now, code) {
+    _apply(held, key, now, code, playerId) {
         if (now === !!held[key]) return;
         held[key] = now;
-        this._send(code, now ? 'keydown' : 'keyup');
+        this._send(code, now ? 'keydown' : 'keyup', playerId);
     },
 
     poll() {
@@ -267,8 +268,8 @@ const GamepadInput = {
             ['l', 'r', 'u', 'd'].forEach(dir => this._apply(held, dir, dirs[dir], controls[dir]));
             this._highlightFace(playerId, pad);
 
-            // スタートボタンは Esc と同じ（取組中の中断メニューを開閉する）
-            this._apply(held, 'start', !!(pad && this._btn(pad, 9)), 'Escape');
+            // スタートボタンは Esc と同じ（取組中の中断メニュー、団体戦の力士選択では詳細カードを開閉する）
+            this._apply(held, 'start', !!(pad && this._btn(pad, 9)), 'Escape', playerId);
             // セレクトボタンは専用のコードで流す（勝ち抜きの選出発表のスキップに使う）
             this._apply(held, 'select', !!(pad && this._btn(pad, 8)), this.SELECT_CODE);
 

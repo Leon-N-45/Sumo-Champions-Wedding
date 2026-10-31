@@ -127,8 +127,12 @@ const MenuNav = {
 
             const cell = this.gridCells()[this.cursor[playerId]];
             if (!this.isSelectable(cell)) return false;
-            teamGame.selectTeamChar(playerId, empty, parseInt(cell.dataset.id));
+            const charId = parseInt(cell.dataset.id);
+            teamGame.selectTeamChar(playerId, empty, charId);
             this.paintCursors();
+            // マウスで枠へ入れた時と同じく、力士名を読み上げる
+            const charData = RIKISHI_DATA.find(d => d.id === charId);
+            if (charData && charData.voice && typeof SoundFX !== 'undefined') SoundFX.playVoice(charData.voice);
             return true;
         }
 
@@ -486,6 +490,7 @@ const MenuNav = {
         window.addEventListener('keydown', (e) => {
                 if (typeof settings !== 'undefined' && settings.waitingForKey) return;
                 if (e.repeat) return;
+                if (this.handleDetailCard(e)) { e.preventDefault(); return; }
                 if (!this.currentScreen()) return;
 
                 for (const playerId of ['p1', 'p2']) {
@@ -522,9 +527,10 @@ const MenuNav = {
         let lastScreen = null;
         const watch = () => {
             const s = this.currentScreen();
-            if (s !== lastScreen) {
+            // 詳細カードや設定を閉じて元の画面へ戻っただけなら、カーソル位置はそのまま残す
+            if (s !== lastScreen && s !== 'modal') {
                 lastScreen = s;
-                if (s && s !== 'modal') this.resetFor(s);
+                if (s) this.resetFor(s);
             }
             requestAnimationFrame(watch);
         };
@@ -533,6 +539,36 @@ const MenuNav = {
 
     // ゲームパッドの入力は gamepad.js がキーイベントとして発行するため、
     // 上の keydown 監視がそのまま拾う。専用の受け口は不要。
+
+    // ---------------------------------------------------------------
+    // 団体戦の詳細カード（スタートボタン／Escで開閉）
+    // ---------------------------------------------------------------
+    /**
+     * 団体戦の力士選択で、カーソルを合わせた力士の詳細カードを開く。
+     * 開いている間は、スタート・決定・取消のどれでも閉じる。
+     * 処理した場合は true を返す。
+     */
+    handleDetailCard(e) {
+        const overlay = document.getElementById('char-detail-overlay');
+        if (overlay) {
+            const closeKeys = ['Escape', ...this.confirmKeys.p1, ...this.confirmKeys.p2,
+                               ...this.cancelKeys.p1, ...this.cancelKeys.p2];
+            if (!closeKeys.includes(e.code)) return false;
+            overlay.remove();
+            return true;
+        }
+
+        if (e.code !== 'Escape' || this.currentScreen() !== 'teamSelect') return false;
+        // コントローラのスタートは押した人のカーソル、キーボードの Esc は1Pのカーソルを使う
+        const playerId = e.padPlayer
+            || ['p1', 'p2'].find(p => settings.usesCursor(p));
+        if (!playerId || !settings.usesCursor(playerId)) return false;
+
+        const cell = this.gridCells()[this.cursor[playerId]];
+        if (!this.isSelectable(cell)) return false;
+        teamGame.ui.showCharDetail(parseInt(cell.dataset.id));
+        return true;
+    },
 
     // ---------------------------------------------------------------
     // 取消の長押しでタイトルへ戻る（力士選択画面のみ）

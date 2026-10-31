@@ -413,7 +413,12 @@ class UIManager {
         const p1Container = document.getElementById('p1-controls');
         const p2Container = document.getElementById('p2-controls');
 
-        if (p1Container) p1Container.innerHTML = `
+        // コントローラで遊ぶプレイヤーは、キーボードの代わりにコントローラのボタンで説明する
+        const usesPad = pid => settings.inputModeOf(pid) === 'gamepad' && typeof GamepadInput !== 'undefined';
+        if (p1Container && usesPad('p1')) p1Container.innerHTML = this.padControlsHtml('p1', p1);
+        if (p2Container && usesPad('p2')) p2Container.innerHTML = this.padControlsHtml('p2', p2);
+
+        if (p1Container && !usesPad('p1')) p1Container.innerHTML = `
             <div class="control-layout p1-layout">
                 <div class="key-visual-grid">
                     <div class="key-row-top"><span class="key block-key" data-code="${p1.u}">${fmt(p1.u)}</span></div>
@@ -431,7 +436,7 @@ class UIManager {
             </div>
         `;
 
-        if (p2Container) p2Container.innerHTML = `
+        if (p2Container && !usesPad('p2')) p2Container.innerHTML = `
             <div class="control-layout p2-layout">
                 <div class="key-desc-list">
                     <div><span class="key-area"><span class="key mini-key">${fmt(p2.u)}</span></span> いなし</div>
@@ -448,6 +453,41 @@ class UIManager {
                 </div>
             </div>
         `;
+    }
+
+    /**
+     * 取組画面の操作説明（コントローラ版）。
+     * 十字キーの←→と、face ボタン4つ（上・左・右・下）の図を出す。
+     * ←→はキーイベント経由で、face ボタンは GamepadInput が直接光らせる。
+     */
+    padControlsHtml(playerId, c) {
+        const pad = GamepadInput.padFor(playerId);
+        const labels = GamepadInput.faceLabels(pad);
+        const roles = GamepadInput.buttonRoles(pad);
+        // 任天堂配置はSFCと同じ色（A赤・B黄・X青・Y緑）で塗る
+        const color = i => GamepadInput.isNintendo(pad) ? ` sfc-${labels[i].toLowerCase()}` : '';
+        const face = (i, pos) =>
+            `<span class="key block-key pad-face pad-${pos}${color(i)}" data-pad="${playerId}" data-btn="${i}">${labels[i]}</span>`;
+        const mini = i => `<span class="key mini-key pad-mini${color(i)}">${labels[i]}</span>`;
+
+        const visual = `
+            <div class="pad-visual">
+                <div class="pad-dpad">
+                    <span class="key block-key" data-code="${c.l}">←</span>
+                    <span class="key block-key" data-code="${c.r}">→</span>
+                </div>
+                <div class="pad-diamond">${face(3, 't')}${face(2, 'l')}${face(1, 'r')}${face(0, 'b')}</div>
+            </div>`;
+        const desc = `
+            <div class="key-desc-list">
+                <div><span class="key-area">${roles.up.map(mini).join('')}</span> いなし</div>
+                <div><span class="key-area">${roles.down.map(mini).join('')}</span> 溜め</div>
+                <div><span class="key-area"><span class="key mini-key">←</span><span class="key mini-key">→</span></span> 移動</div>
+            </div>`;
+
+        return (playerId === 'p1')
+            ? `<div class="control-layout p1-layout pad-layout">${visual}${desc}</div>`
+            : `<div class="control-layout p2-layout pad-layout">${desc}${visual}</div>`;
     }
 
     resetVisuals(p1, p2) {

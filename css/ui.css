@@ -1459,7 +1459,7 @@ input:checked + .slider:before {
     display: flex;
     flex-direction: column;
     gap: 8px;
-    font-size: 1.15rem;
+    font-size: 1.05rem;
     font-weight: bold;
     color: #333;
 }
@@ -1505,6 +1505,44 @@ input:checked + .slider:before {
 .p2-layout .key-visual-grid {
     margin-right: 25px;
 }
+
+/* --- コントローラ版：十字キーの←→と、face ボタン4つの図 --- */
+.control-layout.pad-layout { gap: 36px; }
+.pad-layout .key-desc-list { white-space: nowrap; flex-shrink: 0; }
+.pad-visual {
+    padding-top: 10px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+}
+.p1-layout .pad-visual { margin-left: 15px; }
+.p2-layout .pad-visual { margin-right: 15px; }
+.pad-dpad { display: flex; gap: 5px; }
+
+.pad-diamond { position: relative; width: 102px; height: 102px; }
+.key.block-key.pad-face {
+    position: absolute;
+    min-width: 0;
+    width: 34px;
+    height: 34px;
+    padding: 0;
+    border-radius: 50%;
+    font-size: 1.05rem;
+}
+.pad-face.pad-t { left: 34px; top: 0; }
+.pad-face.pad-b { left: 34px; bottom: 0; }
+.pad-face.pad-l { left: 0; top: 34px; }
+.pad-face.pad-r { right: 0; top: 34px; }
+
+/* 説明の小さなボタンも丸く */
+.key.mini-key.pad-mini { border-radius: 50%; min-width: 0; width: 28px; height: 28px; padding: 0; display: inline-flex; align-items: center; justify-content: center; }
+
+/* SFCと同じボタンの色（A赤・B黄・X青・Y緑） */
+.sfc-a, .sfc-b, .sfc-x, .sfc-y { color: #fff !important; text-shadow: 0 1px 2px rgba(0,0,0,.5); }
+.sfc-a { background: #d8312c !important; border-color: #9b1d19 !important; }
+.sfc-b { background: #e8b400 !important; border-color: #a88200 !important; }
+.sfc-x { background: #2f5fc4 !important; border-color: #1f3f86 !important; }
+.sfc-y { background: #2a9a4a !important; border-color: #1b6a31 !important; }
 
 /* Result Overlay */
 #day-overlay { position: absolute; inset: 0; background: #000; color: #fff; display: flex; align-items: center; justify-content: center; font-size: 5rem; font-weight: 900; z-index: 2000; opacity: 0; pointer-events: none; transition: opacity 0.5s ease; }

@@ -14,8 +14,10 @@
  *
  * 割り当て（1台目=1P、2台目=2P）:
  *   左右      … スティック左右 / 十字キー左右          → 移動
- *   上/ボタン … スティック上・十字上・ボタン0,2        → いなし
- *   下/ボタン … スティック下・十字下・ボタン1,3        → 溜め
+ *   上/ボタン … スティック上・十字上・ボタン            → いなし
+ *   下/ボタン … スティック下・十字下・ボタン            → 溜め
+ * どのボタンが何になるかはパッドの配置で変わる（buttonRoles を参照）。
+ * SFCコントローラ（任天堂配置）は 決定=A キャンセル=B 溜める=A/Y いなし=X/B。
  */
 const GamepadInput = {
     // スティックがどれだけ倒れたら入力とみなすか（誤検知を防ぐ）
@@ -85,16 +87,98 @@ const GamepadInput = {
         const dz = this.deadzone;
         const ax = pad.axes[0] || 0;
         const ay = pad.axes[1] || 0;
+        const hat = this.readHat(pad);
+        const roles = this.buttonRoles(pad);
 
         // 取組中は、いなし・溜めを face ボタンでも出せるようにする
-        const faceU = !menuMode && (this._btn(pad, 0) || this._btn(pad, 2));
-        const faceD = !menuMode && (this._btn(pad, 1) || this._btn(pad, 3));
+        const faceU = !menuMode && this._any(pad, roles.up);
+        const faceD = !menuMode && this._any(pad, roles.down);
+
+        // 十字キー・スティックの上は、画面操作のカーソル移動にだけ使う。
+        // 取組中に上でいなしが暴発しないよう、いなしは face ボタンだけで出す。
+        const stickU = menuMode && (ay <= -dz || this._btn(pad, 12) || hat.u);
 
         return {
-            l: ax <= -dz || this._btn(pad, 14),
-            r: ax >= dz || this._btn(pad, 15),
-            u: ay <= -dz || this._btn(pad, 12) || faceU,
-            d: ay >= dz || this._btn(pad, 13) || faceD
+            l: ax <= -dz || this._btn(pad, 14) || hat.l,
+            r: ax >= dz || this._btn(pad, 15) || hat.r,
+            u: stickU || faceU,
+            d: ay >= dz || this._btn(pad, 13) || hat.d || faceD
+        };
+    },
+
+    /** face ボタンの刻印（ボタン番号 → 表示名）。番号は位置で決まる（0=下、1=右、2=左、3=上） */
+    faceLabels(pad) {
+        const id = (pad && pad.id) || '';
+        if (this.isNintendo(pad))                                              return ['B', 'A', 'Y', 'X'];
+        if (/xbox|xinput|045e/i.test(id))                                      return ['A', 'B', 'X', 'Y'];
+        if (/dualshock|dualsense|playstation|054c|wireless controller/i.test(id)) return ['×', '○', '□', '△'];
+        return ['1', '2', '3', '4'];
+    },
+
+    // 取組画面の操作説明で光らせている face ボタンの状態
+    _faceLit: { p1: [], p2: [] },
+
+    /** 取組中に押している face ボタンを、操作説明の図で光らせる */
+    _highlightFace(playerId, pad) {
+        const active = !!(game && game.state.active && !game.state.paused);
+        for (let i = 0; i < 4; i++) {
+            const on = !!(pad && active && this._btn(pad, i));
+            if (on === !!this._faceLit[playerId][i]) continue;
+            this._faceLit[playerId][i] = on;
+            document.querySelectorAll(`.pad-face[data-pad="${playerId}"][data-btn="${i}"]`)
+                .forEach(el => el.classList.toggle('key-pressed', on));
+        }
+    },
+
+    _any(pad, indexes) {
+        return indexes.some(i => this._btn(pad, i));
+    },
+
+    /** 任天堂配置（右がA・下がB）のパッドかどうか */
+    isNintendo(pad) {
+        return /nintendo|057e|pro controller|joy-?con/i.test((pad && pad.id) || '');
+    },
+
+    /**
+     * face ボタンの役割を、ボタン番号の配列で返す。
+     * 番号は位置で決まる（0=下、1=右、2=左、3=上）。
+     *
+     * 任天堂配置（SFCコントローラなど）は 右=A・下=B・左=Y・上=X なので、
+     *   決定=A　キャンセル=B　溜める=AかY　いなし=XかB
+     * それ以外は従来どおり 下・左で決定／いなし、右・上でキャンセル／溜める。
+     */
+    buttonRoles(pad) {
+        if (this.isNintendo(pad)) {
+            return { confirm: [1], cancel: [0], up: [3, 0], down: [1, 2] };
+        }
+        return { confirm: [0, 2], cancel: [1, 3], up: [0, 2], down: [1, 3] };
+    },
+
+    // 十字キーが「ハットスイッチ」として1本の軸（9番）に出るパッドの記録。
+    // 普通のスティックの軸と見分けるため、中立時に±1を超える値が出たパッドだけを対象にする。
+    _hatPads: {},
+
+    /**
+     * ハットスイッチの十字キーを読み取る（SFCコントローラなど標準配置でないパッド）。
+     * 値は 上=-1 から時計回りに 2/7 ずつ増え、何も押していない時は±1を超える（1.29 など）。
+     */
+    readHat(pad) {
+        const none = { l: false, r: false, u: false, d: false };
+        if (pad.mapping === 'standard') return none;
+        const v = pad.axes[9];
+        if (typeof v !== 'number') return none;
+        if (Math.abs(v) > 1.05) {
+            this._hatPads[pad.id] = true;
+            return none;
+        }
+        if (!this._hatPads[pad.id]) return none;
+
+        const dir = Math.round((v + 1) * 7 / 2);   // 0=上、1=右上、2=右 … 6=左、7=左上
+        return {
+            u: dir === 7 || dir === 0 || dir === 1,
+            r: dir >= 1 && dir <= 3,
+            d: dir >= 3 && dir <= 5,
+            l: dir >= 5 && dir <= 7
         };
     },
 
@@ -114,19 +198,19 @@ const GamepadInput = {
         const id = (pad && pad.id) || '';
         if (/xbox|xinput|045e/i.test(id))                                return { confirm: 'A', cancel: 'B' };
         if (/dualshock|dualsense|playstation|054c|wireless controller/i.test(id)) return { confirm: '×', cancel: '○' };
-        if (/nintendo|057e|pro controller|joy-?con/i.test(id))           return { confirm: 'B', cancel: 'A' };
+        if (this.isNintendo(pad))                                        return { confirm: 'A', cancel: 'B' };
         // アーケードスティックなど刻印が分からないものは番号で示す
         return { confirm: 'ボタン1', cancel: 'ボタン2' };
     },
 
     /** 決定として扱うボタン（画面操作時のみ使用） */
     isConfirm(pad) {
-        return this._btn(pad, 0) || this._btn(pad, 2);
+        return this._any(pad, this.buttonRoles(pad).confirm);
     },
 
     /** 取消（選出のやり直し）として扱うボタン */
     isCancel(pad) {
-        return this._btn(pad, 1) || this._btn(pad, 3);
+        return this._any(pad, this.buttonRoles(pad).cancel);
     },
 
     /**
@@ -176,6 +260,7 @@ const GamepadInput = {
             const held = this._held[playerId];
 
             ['l', 'r', 'u', 'd'].forEach(dir => this._apply(held, dir, dirs[dir], controls[dir]));
+            this._highlightFace(playerId, pad);
 
             // 決定・取消は画面操作中のみ。取組中は face ボタンをいなし・溜めに使う
             const confirmOn = onMenu && pad ? this.isConfirm(pad) : false;

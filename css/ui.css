@@ -1506,36 +1506,30 @@ input:checked + .slider:before {
     margin-right: 25px;
 }
 
-/* --- コントローラ版：十字キーの←→と、face ボタン4つの図 --- */
-.control-layout.pad-layout { gap: 36px; }
-.pad-layout .key-desc-list { white-space: nowrap; flex-shrink: 0; }
-.pad-visual {
-    padding-top: 10px;
-    display: flex;
-    align-items: center;
-    gap: 14px;
+/* --- 説明欄の小さなキー：押している間は光らせる --- */
+.key.mini-key { transition: background-color 0.1s, color 0.1s, transform 0.1s, box-shadow 0.1s; }
+.key.mini-key.key-pressed {
+    background-color: #745399 !important;   /* スモチャン紫 */
+    color: #fff !important;
+    border-color: #4a3363 !important;
 }
-.p1-layout .pad-visual { margin-left: 15px; }
-.p2-layout .pad-visual { margin-right: 15px; }
-.pad-dpad { display: flex; gap: 5px; }
 
-.pad-diamond { position: relative; width: 102px; height: 102px; }
-.key.block-key.pad-face {
-    position: absolute;
-    min-width: 0;
-    width: 34px;
-    height: 34px;
-    padding: 0;
-    border-radius: 50%;
-    font-size: 1.05rem;
-}
-.pad-face.pad-t { left: 34px; top: 0; }
-.pad-face.pad-b { left: 34px; bottom: 0; }
-.pad-face.pad-l { left: 0; top: 34px; }
-.pad-face.pad-r { right: 0; top: 34px; }
+/* --- コントローラ版：説明欄だけを出す（溜め A or Y／いなし X or B／移動 ←→） --- */
+.pad-layout .key-desc-list { white-space: nowrap; margin-left: 25px; }
+.p2-layout.pad-layout .key-desc-list { margin-left: 0; margin-right: 25px; }
+.pad-layout .key-area { width: 110px; }
+.or-text { font-size: 0.85rem; color: #666; margin: 0 2px; }
 
-/* 説明の小さなボタンも丸く */
+/* face ボタンは丸く。押した時は色を残したまま紫の光で囲む */
 .key.mini-key.pad-mini { border-radius: 50%; min-width: 0; width: 28px; height: 28px; padding: 0; display: inline-flex; align-items: center; justify-content: center; }
+.key.mini-key.pad-mini.key-pressed {
+    transform: scale(1.18);
+    box-shadow: 0 0 0 3px #745399, 0 0 12px 2px #745399 !important;
+}
+.key.mini-key.pad-mini.sfc-a.key-pressed { background-color: #d8312c !important; }
+.key.mini-key.pad-mini.sfc-b.key-pressed { background-color: #e8b400 !important; }
+.key.mini-key.pad-mini.sfc-x.key-pressed { background-color: #2f5fc4 !important; }
+.key.mini-key.pad-mini.sfc-y.key-pressed { background-color: #2a9a4a !important; }
 
 /* SFCと同じボタンの色（A赤・B黄・X青・Y緑） */
 .sfc-a, .sfc-b, .sfc-x, .sfc-y { color: #fff !important; text-shadow: 0 1px 2px rgba(0,0,0,.5); }

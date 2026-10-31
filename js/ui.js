@@ -429,9 +429,9 @@ class UIManager {
                     </div>
                 </div>
                 <div class="key-desc-list">
-                    <div><span class="key-area"><span class="key mini-key">${fmt(p1.u)}</span></span> いなし</div>
-                    <div><span class="key-area"><span class="key mini-key">${fmt(p1.d)}</span></span> 溜め</div>
-                    <div><span class="key-area"><span class="key mini-key">${fmt(p1.l)}</span><span class="key mini-key">${fmt(p1.r)}</span></span> 移動</div>
+                    <div><span class="key-area"><span class="key mini-key" data-code="${p1.d}">${fmt(p1.d)}</span></span> 溜め</div>
+                    <div><span class="key-area"><span class="key mini-key" data-code="${p1.u}">${fmt(p1.u)}</span></span> いなし</div>
+                    <div><span class="key-area"><span class="key mini-key" data-code="${p1.l}">${fmt(p1.l)}</span><span class="key mini-key" data-code="${p1.r}">${fmt(p1.r)}</span></span> 移動</div>
                 </div>
             </div>
         `;
@@ -439,9 +439,9 @@ class UIManager {
         if (p2Container && !usesPad('p2')) p2Container.innerHTML = `
             <div class="control-layout p2-layout">
                 <div class="key-desc-list">
-                    <div><span class="key-area"><span class="key mini-key">${fmt(p2.u)}</span></span> いなし</div>
-                    <div><span class="key-area"><span class="key mini-key">${fmt(p2.d)}</span></span> 溜め</div>
-                    <div><span class="key-area"><span class="key mini-key">${fmt(p2.l)}</span><span class="key mini-key">${fmt(p2.r)}</span></span> 移動</div>
+                    <div><span class="key-area"><span class="key mini-key" data-code="${p2.d}">${fmt(p2.d)}</span></span> 溜め</div>
+                    <div><span class="key-area"><span class="key mini-key" data-code="${p2.u}">${fmt(p2.u)}</span></span> いなし</div>
+                    <div><span class="key-area"><span class="key mini-key" data-code="${p2.l}">${fmt(p2.l)}</span><span class="key mini-key" data-code="${p2.r}">${fmt(p2.r)}</span></span> 移動</div>
                 </div>
                 <div class="key-visual-grid">
                     <div class="key-row-top"><span class="key block-key" data-code="${p2.u}">${fmt(p2.u)}</span></div>
@@ -457,8 +457,10 @@ class UIManager {
 
     /**
      * 取組画面の操作説明（コントローラ版）。
-     * 十字キーの←→と、face ボタン4つ（上・左・右・下）の図を出す。
-     * ←→はキーイベント経由で、face ボタンは GamepadInput が直接光らせる。
+     *   溜め   … A or Y（どちらを押してもよい）
+     *   いなし … X or B
+     *   移動   … ← →
+     * 押したボタンが光る（←→はキーイベント経由、face ボタンは GamepadInput が直接光らせる）。
      */
     padControlsHtml(playerId, c) {
         const pad = GamepadInput.padFor(playerId);
@@ -466,28 +468,17 @@ class UIManager {
         const roles = GamepadInput.buttonRoles(pad);
         // 任天堂配置はSFCと同じ色（A赤・B黄・X青・Y緑）で塗る
         const color = i => GamepadInput.isNintendo(pad) ? ` sfc-${labels[i].toLowerCase()}` : '';
-        const face = (i, pos) =>
-            `<span class="key block-key pad-face pad-${pos}${color(i)}" data-pad="${playerId}" data-btn="${i}">${labels[i]}</span>`;
-        const mini = i => `<span class="key mini-key pad-mini${color(i)}">${labels[i]}</span>`;
+        const face = i => `<span class="key mini-key pad-mini${color(i)}" data-pad="${playerId}" data-btn="${i}">${labels[i]}</span>`;
+        const either = list => list.map(face).join('<span class="or-text">or</span>');
 
-        const visual = `
-            <div class="pad-visual">
-                <div class="pad-dpad">
-                    <span class="key block-key" data-code="${c.l}">←</span>
-                    <span class="key block-key" data-code="${c.r}">→</span>
+        return `
+            <div class="control-layout ${playerId}-layout pad-layout">
+                <div class="key-desc-list">
+                    <div><span class="key-area">${either(roles.down)}</span> 溜め</div>
+                    <div><span class="key-area">${either(roles.up)}</span> いなし</div>
+                    <div><span class="key-area"><span class="key mini-key" data-code="${c.l}">←</span><span class="key mini-key" data-code="${c.r}">→</span></span> 移動</div>
                 </div>
-                <div class="pad-diamond">${face(3, 't')}${face(2, 'l')}${face(1, 'r')}${face(0, 'b')}</div>
             </div>`;
-        const desc = `
-            <div class="key-desc-list">
-                <div><span class="key-area">${roles.up.map(mini).join('')}</span> いなし</div>
-                <div><span class="key-area">${roles.down.map(mini).join('')}</span> 溜め</div>
-                <div><span class="key-area"><span class="key mini-key">←</span><span class="key mini-key">→</span></span> 移動</div>
-            </div>`;
-
-        return (playerId === 'p1')
-            ? `<div class="control-layout p1-layout pad-layout">${visual}${desc}</div>`
-            : `<div class="control-layout p2-layout pad-layout">${desc}${visual}</div>`;
     }
 
     resetVisuals(p1, p2) {
@@ -1230,7 +1221,8 @@ class UIManager {
         if (isPressed && this.game && (!this.game.state.active || this.game.state.paused)) {
             return;
         }
-        const keyEls = document.querySelectorAll(`.block-key[data-code="${code}"]`);
+        // 左右のキーの図と、説明欄の小さなキーの両方を光らせる
+        const keyEls = document.querySelectorAll(`.block-key[data-code="${code}"], .mini-key[data-code="${code}"]`);
         keyEls.forEach(el => {
                 if (isPressed) el.classList.add('key-pressed');
                 else el.classList.remove('key-pressed');

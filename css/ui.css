@@ -148,7 +148,7 @@
    行頭がそろうよう左揃えにし、まとまりごとカードの中央へ置く */
 .select-card-guide {
     position: absolute;
-    bottom: calc(900px - 260px);
+    bottom: calc(900px - 252px);
     width: max-content;
     transform: translateX(-50%);
     text-align: left;

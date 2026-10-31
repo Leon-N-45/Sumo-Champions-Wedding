@@ -1359,6 +1359,12 @@ input:checked + .slider:before {
 /* 札は枠の内側に収める。1Pは左上、2Pは右上へ置いて左右で見分けられるようにする */
 .nav-cursor.p1 .nav-cursor-tag { left: 0; }
 .nav-cursor.p2 .nav-cursor-tag { right: 0; }
+/* 団体戦は上のマスの右下にコストが出るので、札を低く・少し透かして読めるようにする */
+#team-select-screen .nav-cursor .nav-cursor-tag {
+    top: -15px;
+    padding: 1px 6px 2px;
+    opacity: 0.75;
+}
 
 /* 枠の色は border-color、札の背景は個別に指定する
    （札自身が color:#fff のため currentColor では白になってしまう） */

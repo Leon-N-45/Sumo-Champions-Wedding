@@ -576,7 +576,7 @@ class TeamGameManager {
         let html = '';
 
         if (winner === 'p1' || winner === 'p2') {
-            titleText = (winner === 'p1' ? '東組' : '西組') + ' 優勝！';
+            titleText = (winner === 'p1' ? '1P組' : '2P組') + ' 優勝！';
 
             const costOf = (id) => {
                 const c = (typeof RIKISHI_DATA !== 'undefined') ? RIKISHI_DATA.find(d => d.id === id) : null;
@@ -626,7 +626,7 @@ class TeamGameManager {
 
         const teamColor = (winner === 'p1') ? 'var(--p1-color)' : ((winner === 'p2') ? 'var(--p2-color)' : null);
         const titleHtml = teamColor
-            ? `<span style="color:${teamColor};">${winner === 'p1' ? '東組' : '西組'}</span> 優勝！`
+            ? `<span style="color:${teamColor};">${winner === 'p1' ? '1P組' : '2P組'}</span> 優勝！`
             : titleText;
         html += `<div class="winner-anim" style="position:relative; z-index:10; font-size:4rem; color:gold; font-weight:900; text-shadow:4px 4px 0 #000; font-family: 'Shippori Mincho', serif;">${titleHtml}</div>`;
         html += `<div id="final-btn-container"><button class="btn" onclick="window.teamGame.teamRematch()">同じ条件で再戦</button><button id="auto-top-btn" class="btn">力士選択へ (5)</button></div>`;

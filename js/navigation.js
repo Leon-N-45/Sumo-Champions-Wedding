@@ -42,7 +42,7 @@ const MenuNav = {
 
     /** いま操作対象になっている画面を返す */
     currentScreen() {
-        if (this.isActive('settings-modal')) return 'modal';
+        if (this.isActive('settings-modal')) return 'settings';
         if (document.getElementById('char-detail-overlay')) return 'modal';
         if (this.isActive('pause-menu')) return 'pause';
 
@@ -71,9 +71,13 @@ const MenuNav = {
                 .filter(b => b.offsetParent !== null && !b.disabled);
         }
         if (screen === 'pause') {
-            // 設定画面はコントローラで閉じられないため、中断メニューからは選ばせない（マウスでは押せる）
             return [...document.querySelectorAll('#pause-menu .pause-btn-list button')]
-                .filter(b => b.offsetParent !== null && !b.disabled && !/設定/.test(b.textContent));
+                .filter(b => b.offsetParent !== null && !b.disabled);
+        }
+        if (screen === 'settings') {
+            // 設定画面は下の「保存して戻る」「キャンセル」だけを選ぶ
+            return [...document.querySelectorAll('#settings-modal .settings-actions button')]
+                .filter(b => b.offsetParent !== null && !b.disabled);
         }
         if (screen === 'result') {
             return [...document.querySelectorAll('#final-btn-container button')]
@@ -95,8 +99,9 @@ const MenuNav = {
 
         if (screen === 'charSelect') return this.handleCharSelect(playerId, action);
         if (screen === 'teamSelect') return this.handleTeamSelect(playerId, action);
-        // 中断メニューは取消でも取組に戻る
+        // 中断メニューは取消でも取組に戻る。設定画面は取消でキャンセルと同じ
         if (screen === 'pause' && action === 'cancel') { game.togglePauseMenu(); return true; }
+        if (screen === 'settings' && action === 'cancel') { settings.cancelMenu(); return true; }
         return this.handleButtons(screen, action);
     },
 
@@ -479,8 +484,10 @@ const MenuNav = {
             if (screen === 'teamSelect') this.updateDetailHint();
         } else {
             this.hideCursors();
-            this.focus = 0;
-            this.paintButtons(this.buttonsOf(screen));
+            const btns = this.buttonsOf(screen);
+            // 設定画面は、うっかり保存しないよう「キャンセル」を選んだ状態で開く
+            this.focus = (screen === 'settings') ? Math.max(0, btns.length - 1) : 0;
+            this.paintButtons(btns);
         }
     },
 
@@ -529,10 +536,24 @@ const MenuNav = {
 
         // 画面が変わったら選択位置を初期化する
         let lastScreen = null;
+        let lastOverlay = null;
+        let focusBeforeSettings = 0;
         const watch = () => {
             const s = this.currentScreen();
-            // 詳細カードや設定を閉じて元の画面へ戻っただけなら、カーソル位置はそのまま残す
-            if (s !== lastScreen && s !== 'modal') {
+            // 詳細カード・設定は元の画面に重なるだけなので、閉じた時はカーソル位置・選択位置を元に戻す
+            const overlay = (s === 'modal' || s === 'settings') ? s : null;
+            if (overlay !== lastOverlay) {
+                if (lastOverlay === 'settings') {
+                    this.focus = focusBeforeSettings;
+                    if (lastScreen && !this.isGridScreen(lastScreen)) this.paintButtons(this.buttonsOf(lastScreen));
+                }
+                if (overlay === 'settings') {
+                    focusBeforeSettings = this.focus;
+                    this.resetFor('settings');
+                }
+                lastOverlay = overlay;
+            }
+            if (!overlay && s !== lastScreen) {
                 lastScreen = s;
                 if (s) this.resetFor(s);
             }
@@ -558,7 +579,7 @@ const MenuNav = {
         const cursorPlayers = ['p1', 'p2'].filter(p => settings.usesCursor(p));
         if (!cursorPlayers.length) { el.textContent = ''; return; }
         const usesPad = cursorPlayers.some(p => settings.inputModeOf(p) === 'gamepad');
-        el.textContent = `力士詳細：${usesPad ? 'START' : 'Esc'}`;
+        el.textContent = `力士の詳細を見る：${usesPad ? 'START' : 'Esc'}`;
     },
 
     /**
@@ -591,7 +612,7 @@ const MenuNav = {
     // ---------------------------------------------------------------
     // 取消の長押しでタイトルへ戻る（力士選択画面のみ）
     // ---------------------------------------------------------------
-    backHoldMs: 2000,
+    backHoldMs: 1500,
     _backHold: { p1: null, p2: null },   // 押し始めた時刻
     _backHoldRaf: null,
 

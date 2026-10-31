@@ -1291,10 +1291,13 @@ input:checked + .slider:before {
 /* --- コントローラ操作のカーソル表示 --- */
 
 /* ボタンが並ぶ画面（タイトル・結果）で今どれを選んでいるか */
+/* キー・コントローラで選んでいるボタンは、マウスを乗せた時と同じ見た目にする */
 .btn.nav-focus {
-    outline: 4px solid #745399;
-    outline-offset: 3px;
-    box-shadow: 0 0 12px rgba(116, 83, 153, 0.7);
+    transform: translateY(-3px);
+    color: #fff !important;
+}
+.btn.nav-focus::after {
+    background-color: #745399 !important;
 }
 
 /* --- 力士選択グリッドのカーソル ---
@@ -1790,14 +1793,17 @@ input:checked + .slider:before {
     right: auto !important;
 }
 
-/* 団体戦：アイコン欄の中央上に「力士詳細：START」 */
+/* 団体戦：アイコン欄の中央上に「力士の詳細を見る：START」（個人戦の操作案内と同じ文字） */
 #team-detail-hint {
     position: absolute;
-    top: 268px;
+    top: 262px;
     left: 0;
     width: 100%;
     text-align: center;
+    font-family: 'tamanegi', sans-serif !important;
+    font-weight: normal !important;
     font-size: 1.1rem;
+    line-height: 1.5;
     pointer-events: none;
     z-index: 40;
 }

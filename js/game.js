@@ -95,6 +95,8 @@ class GameManager {
         // 力士選出画面〜取組結果画面の一連でのみ開ける。タイトルや各選択画面では開かない。
         const isActive = (id) => { const el = document.getElementById(id); return !!(el && el.classList.contains('active')); };
         if (isActive('start-screen') || isActive('char-select-screen') || isActive('team-select-screen')) return;
+        // 中断メニューから設定を開いている間は閉じない（設定が残ったまま取組が再開してしまう）
+        if (isActive('settings-modal')) return;
 
         const wrapper = document.getElementById('game-wrapper');
         const wrapperShown = !!(wrapper && wrapper.style.display && wrapper.style.display !== 'none');
